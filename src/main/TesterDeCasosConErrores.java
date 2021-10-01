@@ -1,19 +1,17 @@
 package main;
 
-import java.io.*;
-import java.util.ArrayList;
-
-import main.Main;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
-import org.junit.Test;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import java.io.*;
+import java.util.ArrayList;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(Parameterized.class)
 public class TesterDeCasosConErrores {
@@ -22,8 +20,8 @@ public class TesterDeCasosConErrores {
 
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final PrintStream originalOut = System.out;
-    private static final String testFilesDirectoryPath = "resources/conErrores/";
-    private String input;
+    private static final String testFilesDirectoryPath = "resources/batteryTestSyntaxParser/conErrores/";
+    private final String input;
 
 
     @Before
@@ -61,7 +59,7 @@ public class TesterDeCasosConErrores {
         String testCaseFilePath = testFilesDirectoryPath + name;
         String errorCode = getErrorCode(testCaseFilePath);
         String[] args = {testCaseFilePath};
-        init.main(args);
+        Main.main(args);
 
         assertThat("No se encontro el codigo: " + errorCode, outContent.toString(), CoreMatchers.containsString(errorCode));
     }

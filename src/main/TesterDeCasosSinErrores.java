@@ -1,18 +1,17 @@
 package main;
 
+import org.hamcrest.CoreMatchers;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
-
-import main.Main;
-import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -21,7 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class TesterDeCasosSinErrores {
 
     private static final String msgExito = "[SinErrores]";
-    private static final String testFilesDirectoryPath = "resources/sinErrores/";
+    private static final String testFilesDirectoryPath = "resources/batteryTestSyntaxParser/sinErrores/";
 
     //TODO: el tipo de esta variable init tiene que ser la clase que tiene el main
     private static final Main init = null;
@@ -52,7 +51,7 @@ public class TesterDeCasosSinErrores {
 
     }
 
-    private String input;
+    private final String input;
 
     public TesterDeCasosSinErrores(String input) {
         this.input = input;
@@ -68,7 +67,7 @@ public class TesterDeCasosSinErrores {
     void probarExito(String name) {
         String path = testFilesDirectoryPath + name;
         String[] args = {path};
-        init.main(args);
+        Main.main(args);
 
         assertThat("Mensaje Incorrecto en: " + path, outContent.toString(), CoreMatchers.containsString(msgExito));
 

@@ -1,0 +1,113 @@
+<Inicial> ::= <ListaClases> | EOF 
+
+<ListaClases> ::= <Clase> <ListaClaseOVacio>
+
+<ListaClaseOVacio> ::= <ListaClases> | vacio  
+
+<Clase> ::= class idClase <Herencia> { <ListaMiembros> }
+
+<Herencia> ::= extends idClase | vacio
+
+<ListaMiembros> ::= <Miembro> <ListaMiembros> | vacío
+
+<Miembro> ::= <Atributo> | <Constructor> | <Método>
+
+<Atributo> ::= <Visibilidad> <Tipo> <ListaDecAtrs> ;
+
+<Metodo> ::= <FormaMetodo> <TipoMetodo> idMetVar <ArgsFormales> <Bloque>
+
+<Constructor> ::= idClase <ArgsFormales> <Bloque>
+
+<Visibilidad> ::= public | private
+
+<Tipo> ::= <TipoPrimitivo> | idClase
+
+<TipoPrimitivo> ::= boolean | char | int | String
+
+<ListaDeclAtrs> ::= idMetVar <ListaDeclAtrsOVacio>
+
+<ListaDeclAtrsOVacio> ::= , <ListaDeclAtrs> | vacío
+
+<FormaMetodo> ::= static | dynamic
+
+<TipoMetodo> ::= <Tipo> | void
+
+<ArgsFormales> ::= ( <ListaArgsFormalesOVacio> )
+
+<ListaArgsFormalesOVacio> ::= <ListaArgsFormales> | vacio
+
+<ListaArgsFormales> ::= <ArgFormal> <ListaArgFormalesEncadenada>
+
+<ArgFormal> ::= <Tipo> idMetVar
+
+<ListaArgFormalesEncadenada> ::= , <ListaArgsFormales> | vacio 
+
+<Bloque> ::= { <ListaSentencias> }
+
+<ListaSentencias> ::= <Sentencia> <ListaSentencias> | vacio
+
+<Sentencia> ::= ; | <Acceso> <SentenciaAsignacion> ; | <VarLocal> ; | <Return> ;|  <If> | <For> | <Bloque>
+
+<SentenciaAsignacion> ::= <TipoDeAsignacion> | vacio
+
+<Asignacion> ::= <Acceso> <TipoDeAsignacion>
+
+<TipoDeAsignacion> ::= = <Expresion> | ++ | --
+
+<VarLocal> ::= <Tipo> idMetVar <VarLocalIni>
+
+<VarLocalIni> ::= = <Expresion> | vacio
+
+<Return> ::= return <ExpresionOVacio>
+
+<ExpresionOVacio> ::= <Expresión> | vacío
+
+<If> ::= if ( <Expresion> ) <Sentencia> <ElseOVacio>
+
+<ElseOVacio> ::= else <Sentencia> | vacío 
+
+<For> ::= for ( <VarLocal> ; <Expresion> ; <Asignacion> ) <Sentencia>
+
+<Expresión> ::= <ExpresionUnaria> <ExpresionPrima>
+
+<ExpresionPrima> ::= <OperadorBinario> <ExpresionUnaria> <ExpresionPrima> | Vacio
+
+<OperadorBinario> ::= || | && | == | != | < | > | <= | >= | + | - | * | / | %
+
+<ExpresionUnaria> ::= <OperadorUnario> <Operando> | <Operando>
+
+<OperadorUnario> ::= + | - | !
+
+<Operando> ::= <Literal> | <Acceso>
+
+<Literal> ::= null | true | false | LitInt | LitChar | LitString
+
+<Acceso> ::= ( <PrimarioParentesisAbierta> | <PrimarioSinParentesis> <Encadenado>
+
+<PrimarioSinParentesis> ::= <AccesoThis> | <AccesoVarOMet> | <AccesoConstructor>
+
+<PrimarioParentesisAbierta> ::= idClase ) <PrimarioEntero> <Encadenado> | <PrimarioEnParentesis>
+
+<PrimarioEntero> ::= <PrimarioSinParentesis> | ( <PrimarioParentesisAbierta>
+
+<PrimarioEnParentesis> ::= <Expresion>)
+
+<AccesoThis> ::= this
+
+<AccesoVarOMet> ::= idMetVar <VarOMet>
+
+<VarOMet> ::= <ArgsActuales> | vacío
+
+<AccesoConstructor> ::= new idClase <ArgsActuales>
+
+<ArgsActuales> ::= ( <ListaExpsOVacio> )
+
+<ListaExpsOVacio> ::= <ListaExps> | vacio
+
+<ListaExps> ::= <Expresión> <ExpresionEncadenada>
+
+<ExpresionEncadenada> ::= , <ListaExps> | vacio
+
+<Encadenado> ::= <VarOMetodoEncadenado> <Encadenado> | vacío
+
+<VarOMetodoEncadenado> ::= . idMetVar <VarOMetodo>
