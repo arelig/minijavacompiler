@@ -1,0 +1,157 @@
+<Inicial> ::= <ListaClases> | EOF
+
+<ListaClases> ::= <Clase> <ListaClaseOVacio>
+
+<ListaClaseOVacio> ::= <ListaClases> | vacio  
+
+<Clase> ::= class idClase {Clase cl = new Clase(idClase.token)
+if(!(declaredClass(cl))){
+    TS.currentClass = cl;
+}} <Herencia> { TS.claseActual.heredaDe(<Herencia>.entidad)}
+{ <ListaMiembros> } {TS.addClass(TS.claseActual)}
+
+<Herencia> ::= extends idClase{<Herencia>.entidad = new Entidad(idClase.lexeme, idClase.line)}
+| vacio {<Herencia>.entidad = new Entidad("Object")}
+
+<ListaMiembros> ::= <Miembro> <ListaMiembros> | vacío
+
+<Miembro> ::= <Atributo>
+| <Constructor>
+| <Método>
+
+
+<Atributo> ::= <Visibilidad> <Tipo> <ListaDecAtrs> {
+for(token : <ListaDecAtrs>.list){
+    Atributo a = new Atributo(<Visibilidad>, <Tipo>.type, token);
+    if(!(TS.currentClass.declaredAttr(a))){
+        TS.currentClass.addAttr(a);
+    }
+}} ;
+
+<Metodo> ::= <FormaMetodo> <TipoMetodo> idMetVar <ArgsFormales> {Metodo m =
+new Metodo(<FormaMetodo>.string,
+<TipoMetodo>.type,
+idMetVar.token,
+<ArgsFormales>.list);
+TS.setCurrentMethod(m)} <Bloque>
+
+<Constructor> ::= idClase <ArgsFormales> <Bloque>
+
+<Visibilidad> ::= public {<Visibilidad> = public}
+| private {<Visibilidad> = private}
+
+<Tipo> ::= <TipoPrimitivo> {<Tipo>.type = <TipoPrimitivo>.type}
+| idClase {<Tipo>.type = new TipoReferencia(idClase.token)}
+
+<TipoPrimitivo> ::= boolean{<TipoPrimitivo>.type = new TipoPrimitivo(boolean)}
+| char {<TipoPrimitivo>.type = new TipoPrimitivo(char)}
+| int ({<TipoPrimitivo>.type = new TipoPrimitivo(int)})
+| String {<TipoPrimitivo>.type = new TipoPrimitivo(String)}
+
+<ListaDeclAtrs> ::= idMetVar {<ListaDeclAtr>.list.add(idMetVar.token)} <ListaDeclAtrsOVacio>
+
+<ListaDeclAtrsOVacio> ::= , <ListaDeclAtrs> | vacío
+
+<FormaMetodo> ::= static{<FormaMetodo>.String = STATIC}
+| dynamic {<FormaMetodo>.String = DYNAMIC}
+
+<TipoMetodo> ::= <Tipo> {<TipoMetodo>.type = type}
+| void {<TipoMetodo>.type = new TipoVoid(token)}
+
+<ArgsFormales> ::= ( <ListaArgsFormalesOVacio> )
+
+<ListaArgsFormalesOVacio> ::= <ListaArgsFormales>
+| vacio
+
+<ListaArgsFormales> ::= <ArgFormal> {
+} <ListaArgFormalesEncadenada>
+
+<ArgFormal> ::= <Tipo> idMetVar {
+ArgFormal arg = new ArgFormal(<ArgFormal>.type, idMetVar.token);
+<ArgFormal> = arg}
+
+<ListaArgFormalesEncadenada> ::= , <ListaArgsFormales> | vacio
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<Bloque> ::= { <ListaSentencias> }
+
+<ListaSentencias> ::= <Sentencia> <ListaSentencias> | vacio
+
+<Sentencia> ::= ; | <Acceso> <SentenciaAsignacion> ; | <VarLocal> ; | <Return> ;|  <If> | <For> | <Bloque>
+
+<SentenciaAsignacion> ::= <TipoDeAsignacion> | vacio
+
+<Asignacion> ::= <Acceso> <TipoDeAsignacion>
+
+<TipoDeAsignacion> ::= = <Expresion> | ++ | --
+
+<VarLocal> ::= <Tipo> idMetVar <VarLocalIni>
+
+<VarLocalIni> ::= = <Expresion> | vacio
+
+<Return> ::= return <ExpresionOVacio>
+
+<ExpresionOVacio> ::= <Expresión> | vacío
+
+<If> ::= if ( <Expresion> ) <Sentencia> <ElseOVacio>
+
+<ElseOVacio> ::= else <Sentencia> | vacío 
+
+<For> ::= for ( <VarLocal> ; <Expresion> ; <Asignacion> ) <Sentencia>
+
+<Expresión> ::= <ExpresionUnaria> <ExpresionPrima>
+
+<ExpresionPrima> ::= <OperadorBinario> <ExpresionUnaria> <ExpresionPrima> | Vacio
+
+<OperadorBinario> ::= || | && | == | != | < | > | <= | >= | + | - | * | / | %
+
+<ExpresionUnaria> ::= <OperadorUnario> <Operando> | <Operando>
+
+<OperadorUnario> ::= + | - | !
+
+<Operando> ::= <Literal> | <Acceso>
+
+<Literal> ::= null | true | false | LitInt | LitChar | LitString
+
+<Acceso> ::= ( <PrimarioParentesisAbierta> | <PrimarioSinParentesis> <Encadenado>
+
+<PrimarioSinParentesis> ::= <AccesoThis> | <AccesoVarOMet> | <AccesoConstructor>
+
+<PrimarioParentesisAbierta> ::= idClase ) <PrimarioEntero> <Encadenado> | <PrimarioEnParentesis> <Encadenado>
+
+<PrimarioEntero> ::= <PrimarioSinParentesis> | ( <PrimarioParentesisAbierta>
+
+<PrimarioEnParentesis> ::= <Expresion>)
+
+<AccesoThis> ::= this
+
+<AccesoVarOMet> ::= idMetVar <ArgOVacio>
+
+<ArgOVacio> ::= <ArgsActuales> | vacío
+
+<AccesoConstructor> ::= new idClase <ArgsActuales>
+
+<ArgsActuales> ::= ( <ListaExpsOVacio> )
+
+<ListaExpsOVacio> ::= <ListaExps> | vacio
+
+<ListaExps> ::= <Expresión> <ExpresionEncadenada>
+
+<ExpresionEncadenada> ::= , <ListaExps> | vacio
+
+<Encadenado> ::= <VarOMetodoEncadenado> <Encadenado> | vacío
+
+<VarOMetodoEncadenado> ::= . idMetVar <VarOMetodo>

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/etapa1_iglesias.iml" filepath="$PROJECT_DIR$/etapa1_iglesias.iml" />
+      <module fileurl="file://$PROJECT_DIR$/minijavacompiler_iglesias.iml" filepath="$PROJECT_DIR$/minijavacompiler_iglesias.iml" />
     </modules>
   </component>
 </project>
