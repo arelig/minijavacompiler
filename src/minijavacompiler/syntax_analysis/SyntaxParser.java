@@ -1,9 +1,7 @@
 package minijavacompiler.syntax_analysis;
 
 import minijavacompiler.ast_data_structures.expression_nodes.*;
-import minijavacompiler.ast_data_structures.sentence_nodes.AssignmentNode;
-import minijavacompiler.ast_data_structures.sentence_nodes.BlockNode;
-import minijavacompiler.ast_data_structures.sentence_nodes.SentenceNode;
+import minijavacompiler.ast_data_structures.sentence_nodes.*;
 import minijavacompiler.catbag.FileManager;
 import minijavacompiler.data_structures.Class;
 import minijavacompiler.data_structures.*;
@@ -211,7 +209,7 @@ public class SyntaxParser {
     private void classes() throws CompilerException {
         if (currentToken.getTokenType() == TokenType.CLASS) {
             match(TokenType.CLASS);
-            if (SymbolTable.getInstance().isClassDeclared(currentToken.getLexeme())) {
+            if (TS.isClassDeclared(currentToken.getLexeme())) {
                 throw new SemanticException(currentToken.getLexeme(), currentToken.getLine(), "Clase ya definida");
             }
             Class aClass = new Class(currentToken);
@@ -278,6 +276,7 @@ public class SyntaxParser {
     private void method() throws CompilerException {
         if (Arrays.asList(TokenType.STATIC, TokenType.DYNAMIC).
                 contains(currentToken.getTokenType())) {
+
             String bindingForm = bindingForm();
             Type returnType = methodReturnType();
             Token tknMet = currentToken;
@@ -285,9 +284,9 @@ public class SyntaxParser {
             Method aMethod = new Method(bindingForm, returnType, tknMet);
             TS.setCurrentUnit(aMethod);
             parameters();
-            TS.getCurrentClass().addMet(aMethod);
             BlockNode block = block();
             aMethod.setBlock(block);
+            TS.getCurrentClass().addMet(aMethod);
         } else {
             throw createSyntaxException(currentToken, "method binding: static or dynamic");
         }
@@ -454,10 +453,11 @@ public class SyntaxParser {
     }
 
     private BlockNode block() throws CompilerException {
-        BlockNode blockNode = new BlockNode(currentToken);
+        BlockNode blockNode;
         if (currentToken.getTokenType() == TokenType.BRACES_OPEN) {
+            blockNode = new BlockNode(currentToken);
             match(TokenType.BRACES_OPEN);
-            SymbolTable.getInstance().setCurrentBlock(blockNode);
+            TS.setCurrentBlock(blockNode);
             ListaSentencias();
             match(TokenType.BRACES_CLOSE);
         } else {
@@ -471,7 +471,8 @@ public class SyntaxParser {
     //---------------------------------------------------------------------------------------------
     private void ListaSentencias() throws CompilerException {
         if (firstsSentence().contains(currentToken.getTokenType())) {
-            SymbolTable.getInstance().getCurrentBlock().addSentence(Sentencia());
+            SentenceNode sentenceNode = Sentencia();
+            TS.getCurrentBlock().addSentence(sentenceNode);
             ListaSentencias();
         } else {
         }
@@ -480,15 +481,16 @@ public class SyntaxParser {
     private SentenceNode Sentencia() throws CompilerException {
         SentenceNode sentenceNode = null;
         if (currentToken.getTokenType() == TokenType.SEMICOLON) {
+            sentenceNode = new EmptyNode(currentToken);
             match(TokenType.SEMICOLON);
         } else if (firstsAccess().contains(currentToken.getTokenType())) {
             sentenceNode = Asignacion();
             match(TokenType.SEMICOLON);
         } else if (firstsType().contains(currentToken.getTokenType())) {
-            VarLocal();
+            sentenceNode = VarLocal();
             match(TokenType.SEMICOLON);
         } else if (currentToken.getTokenType() == TokenType.RETURN) {
-            Return();
+            sentenceNode = Return();
             //liberar todo lo que el bloque reservo.
             match(TokenType.SEMICOLON);
         } else if (currentToken.getTokenType() == TokenType.IF) {
@@ -534,31 +536,44 @@ public class SyntaxParser {
         return expressionNode;
     }
 
-    private void VarLocal() throws CompilerException {
+    private SentenceNode VarLocal() throws CompilerException {
+        LocalVarNode localVarNode = null;
         if (firstsType().contains(currentToken.getTokenType())) {
-            type();
+            Type type = type();
+            localVarNode = new LocalVarNode(currentToken);
             match(TokenType.ID_MET_VAR);
-            VarLocalIni();
+            ExpressionNode expression = VarLocalIni();
+            localVarNode.setType(type);
+            localVarNode.setInit(expression);
         } else {
             throw createSyntaxException(currentToken, "int, boolean, char, String, idClass");
         }
+        return localVarNode;
     }
 
-    private void VarLocalIni() throws CompilerException {
+    private ExpressionNode VarLocalIni() throws CompilerException {
+        ExpressionNode expressionNode = null;
         if (currentToken.getTokenType() == TokenType.ASSIGN) {
             match(TokenType.ASSIGN);
-            Expresion();
+            expressionNode = Expresion();
         } else {
         }
+        return expressionNode;
     }
 
-    private void Return() throws CompilerException {
+    private SentenceNode Return() throws CompilerException {
+        ReturnNode returnNode = null;
+
         if (currentToken.getTokenType() == TokenType.RETURN) {
+            returnNode = new ReturnNode(currentToken);
             match(TokenType.RETURN);
-            ExpresionOVacio();
+            ExpressionNode expressionNode = ExpresionOVacio();
+            returnNode.setExpression(expressionNode);
         } else {
             throw createSyntaxException(currentToken, "return");
         }
+
+        return returnNode;
     }
 
     private void If() throws CompilerException {
@@ -598,15 +613,19 @@ public class SyntaxParser {
         }
     }
 
-    private void ExpresionOVacio() throws CompilerException {
+    private ExpressionNode ExpresionOVacio() throws CompilerException {
+        ExpressionNode expressionNode = null;
         if (firstsExpression().contains(currentToken.getTokenType())) {
-            Expresion();
+            expressionNode = Expresion();
         } else {
         }
+
+        return expressionNode;
     }
 
     private ExpressionNode Expresion() throws CompilerException {
         ExpressionNode expressionNode = null;
+
         if (firstsUnaryExpression().contains(currentToken.getTokenType())) {
             expressionNode = ExpresionUnaria();
             ExpresionPrima();
@@ -706,7 +725,7 @@ public class SyntaxParser {
         if (firstsLiteral().contains(currentToken.getTokenType())) {
             operandNode = Literal();
         } else if (firstsAccess().contains(currentToken.getTokenType())) {
-            Acceso();
+            operandNode = Acceso();
         } else {
             throw createSyntaxException(currentToken, "literal, acceso");
         }
@@ -718,6 +737,7 @@ public class SyntaxParser {
         OperandNode operandNode = null;
         switch (currentToken.getTokenType()) {
             case NULL:
+                //solo compatible con TipoReferencia
                 operandNode = new LiteralNullNode(currentToken);
                 match(TokenType.NULL);
                 break;
@@ -756,7 +776,6 @@ public class SyntaxParser {
             accessNode = PrimarioSinParentesis();
             //si el último acceso de la cadena es un método o un constructor, es llamable
             //si no, no
-
             //si me devuelve null no es llamable por ahora
             Encadenado();
         } else {
@@ -832,7 +851,6 @@ public class SyntaxParser {
     private AccessNode AccesoVarOMet() throws CompilerException {
         AccessNode accessNode = null;
         if (currentToken.getTokenType() == TokenType.ID_MET_VAR) {
-            //aca seria la resolucion de nombres de la variable que fue puesta en la sentencia de asignacion
             accessNode = new AccessVarNode(currentToken);
             match(TokenType.ID_MET_VAR);
 

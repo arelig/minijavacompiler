@@ -1,0 +1,14 @@
+///[Error:=|12]
+///Conformacion de supertipo incompatible
+class A {
+     static void main() {
+
+     }
+}
+
+class B extends A {
+    public B v2;
+    dynamic void m1(int v1){
+        v2 = v1;
+    }
+}

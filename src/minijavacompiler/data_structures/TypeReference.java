@@ -24,19 +24,15 @@ public class TypeReference extends Type {
     }
 
     @Override
-    public boolean conform(Type type) {
-        //si el this conforma con el tipo que te estan pasando
-        //o es el mismo tipo o hereda de ese tipo.
+    public boolean conform(Type type) throws SemanticException {
+        boolean conforma = false;
+
         if (type instanceof TypeReference) {
-            Class claseAConformar = SymbolTable.getInstance().getClassById(type.getId());
-            Class claseConformante = SymbolTable.getInstance().getClassById(getId());
-
-            //primero, ver si clase a conformar es la misma clase que clase conformante
-            //sino, si la clase conformante es una decendiente a conformar.
-
-            return claseAConformar.equals(claseConformante);
+            conforma = SymbolTable.getInstance().classConform(getId(), type.getId());
+        } else {
+            throw new SemanticException(getId(), getLine(), "Conformacion de tipos incompatible");
         }
-        return false;
+        return conforma;
     }
 
     @Override

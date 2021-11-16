@@ -19,17 +19,8 @@ public class AssignmentNode extends SentenceNode {
         Type rightType = rightNode.validate();
 
         if (!rightType.conform(leftType)) {
-            throw new SemanticException(getId(), getLine(), "Asignacion: conformacion de tipos incompatible");
+            throw new SemanticException(getId(), getLine(), "Conformacion de tipos incompatible");
         }
-
-
-        //sentencias tiene un chequear que no devuelve nada, no te devuelven un tipo, estan bien o mal
-        //el chequear en las expresiones aparte del chequeo te devuelve un tipo
-        //el tipo lo va a usar quien contenga esa expresion
-
-
-        //si el tipo ladoDer.chequear() no conforma con el tipo de ladoIzq.chequear()
-        //entonces Error
     }
 
     @Override

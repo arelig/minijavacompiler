@@ -413,4 +413,34 @@ public class SymbolTable {
     public void setCurrentBlock(BlockNode currentBlock) {
         this.currentBlock = currentBlock;
     }
+
+    //si la clase conformante es una decendiente a conformar.
+    public boolean classConform(String conforma, String conformante) throws SemanticException {
+        boolean conforms = false;
+
+        Class claseAConformar = getClassById(conforma);
+        Class claseConformante = getClassById(conformante);
+
+        if (conforma.equals(conformante)) {
+            conforms = true;
+        } else {
+            conforms = searchForInheritance(claseAConformar, claseConformante);
+        }
+
+        return conforms;
+    }
+
+    private boolean searchForInheritance(Class claseAConformar, Class claseConformante) throws SemanticException {
+        boolean conform = false;
+
+        while (!claseAConformar.getId().equals("Object") && !conform) {
+            if (!claseAConformar.getAncestor().getId().equals(claseConformante.getId())) {
+                claseAConformar = claseAConformar.getAncestor();
+            } else {
+                conform = true;
+            }
+        }
+
+        return conform;
+    }
 }

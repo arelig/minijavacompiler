@@ -1,0 +1,11 @@
+class A {
+     static void main() {
+
+     }
+}
+
+class B extends A {
+    dynamic void m1(B v1){
+        A a;
+    }
+}

@@ -1,0 +1,13 @@
+///[Error:a|11]
+///Conformacion de tipos en inicializacion de variable local
+class A {
+     static void main() {
+
+     }
+}
+
+class B extends A {
+    dynamic void m1(B v1){
+        A a = 2;
+    }
+}
