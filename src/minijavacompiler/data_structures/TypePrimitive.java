@@ -15,6 +15,11 @@ public class TypePrimitive extends Type {
     }
 
     @Override
+    public boolean conform(Type type) {
+        return equals(type);
+    }
+
+    @Override
     public boolean equals(Type type) {
         return getId().equals(type.getId());
     }

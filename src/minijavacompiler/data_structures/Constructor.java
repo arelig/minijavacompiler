@@ -7,14 +7,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Constructor extends Unit {
-    private final HashMap<String, Parameter> params;
+    private final HashMap<String, Parameter> paramsMap;
+
+    private final HashMap<String, Attribute> localAttrMap;
 
     public Constructor(Token tknConstr) {
         setId(tknConstr.getLexeme());
         setLine(tknConstr.getLine());
 
-        params = new HashMap<>();
+        paramsMap = new HashMap<>();
         paramsAsList = new ArrayList<>();
+
+        localAttrMap = new HashMap<>();
     }
 
     @Override
@@ -25,14 +29,33 @@ public class Constructor extends Unit {
     }
 
     public void addParam(Parameter param) throws SemanticException {
-        if (params.containsKey(param.getId())) {
+        if (paramsMap.containsKey(param.getId())) {
             throw new SemanticException(param.getId(),
                     param.getLine(), "Parametro "
                     + param.getId()
                     + " ya declarado");
         }
-        params.put(param.getId(), param);
+        paramsMap.put(param.getId(), param);
         getParamsAsList().add(param);
+    }
+
+    public boolean isParamDeclared(String id) {
+        return paramsMap.containsKey(id);
+    }
+
+    @Override
+    public boolean isLocalAttrDeclared(String id) {
+        return localAttrMap.containsKey(id);
+    }
+
+    @Override
+    public HashMap<String, Parameter> getParamsMap() {
+        return paramsMap;
+    }
+
+    @Override
+    public HashMap<String, Attribute> getLocalAttrMap() {
+        return localAttrMap;
     }
 
 }

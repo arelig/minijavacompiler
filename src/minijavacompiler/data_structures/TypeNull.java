@@ -3,11 +3,11 @@ package minijavacompiler.data_structures;
 import minijavacompiler.exceptions.SemanticException;
 import minijavacompiler.lexical_parser.Token;
 
-public class TypeVoid extends Type {
+public class TypeNull extends Type {
 
-    public TypeVoid(Token token) {
-        setId(token.getLexeme());
-        setLine(token.getLine());
+    public TypeNull(Token tkn) {
+        setId(tkn.getLexeme());
+        setLine(tkn.getLine());
     }
 
     @Override
@@ -21,7 +21,7 @@ public class TypeVoid extends Type {
     }
 
     @Override
-    public boolean equals(Type type) {
-        return getId().equals(type.getId());
+    public boolean equals(Type a) {
+        return getId().equals(a.getId());
     }
 }

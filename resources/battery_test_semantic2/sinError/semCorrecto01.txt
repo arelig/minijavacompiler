@@ -1,0 +1,11 @@
+class Clase {
+     static void main() {
+
+     }
+
+     dynamic void m1(int a) {
+        a = 5;
+     }
+}
+
+

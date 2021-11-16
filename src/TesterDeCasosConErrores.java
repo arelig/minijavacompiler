@@ -21,7 +21,7 @@ public class TesterDeCasosConErrores {
 
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final PrintStream originalOut = System.out;
-    private static final String testFilesDirectoryPath = "resources/battery_test_semantic/conErrores/";
+    private static final String testFilesDirectoryPath = "resources/battery_test_semantic2/conError/";
     private final String input;
 
     public TesterDeCasosConErrores(String input) {

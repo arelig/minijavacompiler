@@ -72,25 +72,13 @@ ArgFormal arg = new ArgFormal(<ArgFormal>.type, idMetVar.token);
 
 <ListaArgFormalesEncadenada> ::= , <ListaArgsFormales> | vacio
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+/////////////////////////////////////
 
 <Bloque> ::= { <ListaSentencias> }
 
 <ListaSentencias> ::= <Sentencia> <ListaSentencias> | vacio
 
-<Sentencia> ::= ; | <Acceso> <SentenciaAsignacion> ; | <VarLocal> ; | <Return> ;|  <If> | <For> | <Bloque>
+<Sentencia> ::= ; | <Acceso> <DeclaracionOVacio> ; | <VarLocal> ; | <Return> ;|  <If> | <For> | <Bloque>
 
 <SentenciaAsignacion> ::= <TipoDeAsignacion> | vacio
 
@@ -106,9 +94,10 @@ ArgFormal arg = new ArgFormal(<ArgFormal>.type, idMetVar.token);
 
 <ExpresionOVacio> ::= <Expresión> | vacío
 
-<If> ::= if ( <Expresion> ) <Sentencia> <ElseOVacio>
+<If> ::= if ( <Expresion> ) <Sentencia> {<If>.nodo = new NodoIfSolo(<Expresion>.nodo, <Sentencia>.nodo) } <ElseOVacio>
 
-<ElseOVacio> ::= else <Sentencia> | vacío 
+//hereda expresion de control de if
+<ElseOVacio> ::= else <Sentencia> {<Else>.nodo = new NodoIfElse(<Expresion>.nodo, <Sentencia>.nodo) } | vacío
 
 <For> ::= for ( <VarLocal> ; <Expresion> ; <Asignacion> ) <Sentencia>
 

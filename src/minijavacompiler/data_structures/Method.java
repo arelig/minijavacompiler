@@ -11,6 +11,8 @@ public class Method extends Unit {
     private final Type returnType;
     private final HashMap<String, Parameter> params;
 
+    private final HashMap<String, Attribute> localAttrMap;
+
     public Method(String binding, Type returnType, Token token) {
         setId(token.getLexeme());
         setLine(token.getLine());
@@ -18,6 +20,8 @@ public class Method extends Unit {
         this.returnType = returnType;
         this.params = new HashMap<>();
         paramsAsList = new ArrayList<>();
+
+        localAttrMap = new HashMap<>();
     }
 
     public Type getReturnType() {
@@ -49,5 +53,24 @@ public class Method extends Unit {
         for (Parameter p : getParamsAsList()) {
             p.check();
         }
+    }
+
+    public boolean isParamDeclared(String id) {
+        return params.containsKey(id);
+    }
+
+    @Override
+    public boolean isLocalAttrDeclared(String id) {
+        return localAttrMap.containsKey(id);
+    }
+
+    @Override
+    public HashMap<String, Parameter> getParamsMap() {
+        return params;
+    }
+
+    @Override
+    public HashMap<String, Attribute> getLocalAttrMap() {
+        return localAttrMap;
     }
 }

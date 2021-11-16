@@ -41,10 +41,9 @@ public class MainModule {
     private void compile() {
         try {
             syntaxParser.start();
-            SymbolTable.getInstance().checkSemantic();
+            SymbolTable.getInstance().checkDeclaration();
+            SymbolTable.getInstance().checkSentences();
         } catch (CompilerException exception) {
-//            System.out.println(exception.generateCodeError());
-//            System.out.println(exception.generateElegantError());
             stackException.push(exception);
         }
 

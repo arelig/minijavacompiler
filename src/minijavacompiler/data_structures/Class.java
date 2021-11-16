@@ -288,5 +288,17 @@ public class Class extends Entity {
         }
     }
 
+    public boolean isAttrDeclared(String id) {
+        return attrsMap.containsKey(id);
+    }
 
+
+    public void checkSentences() throws SemanticException {
+        for (Method method : methsMap.values()) {
+            SymbolTable.getInstance().setCurrentUnit(method);
+            method.checkSentences();
+        }
+
+        //falta chequear constructores
+    }
 }

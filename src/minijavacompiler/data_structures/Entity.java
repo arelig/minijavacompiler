@@ -7,9 +7,6 @@ public abstract class Entity {
     private String id;
     private int line;
 
-    public Entity() {
-    }
-
     public String getId() {
         return id;
     }

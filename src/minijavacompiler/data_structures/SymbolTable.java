@@ -1,5 +1,6 @@
 package minijavacompiler.data_structures;
 
+import minijavacompiler.ast_data_structures.sentence_nodes.BlockNode;
 import minijavacompiler.exceptions.SemanticException;
 import minijavacompiler.lexical_parser.Token;
 import minijavacompiler.lexical_parser.TokenType;
@@ -11,6 +12,7 @@ public class SymbolTable {
     private final HashMap<String, Class> classMap;
     private Class currentClass;
     private Unit currentUnit;
+    private BlockNode currentBlock;
 
 
     private SymbolTable() {
@@ -41,11 +43,18 @@ public class SymbolTable {
         classMap.put(aClass.getId(), aClass);
     }
 
-    public void checkSemantic() throws SemanticException {
-        checkDeclaration();
+    public void checkDeclaration() throws SemanticException {
+        checkClassDeclaration();
         consolidate();
         if (!checkMainDeclaration()) {
             throw new SemanticException("main", 0, "No se encontro declaracion de metodo main");
+        }
+    }
+
+    public void checkSentences() throws SemanticException {
+        for (Class aClass : classMap.values()) {
+            setCurrentClass(aClass);
+            aClass.checkSentences();
         }
     }
 
@@ -66,7 +75,7 @@ public class SymbolTable {
         return exist;
     }
 
-    public void checkDeclaration() throws SemanticException {
+    public void checkClassDeclaration() throws SemanticException {
         for (Class aClass : classMap.values()) {
             aClass.check();
         }
@@ -76,6 +85,10 @@ public class SymbolTable {
         for (Class aClass : classMap.values()) {
             aClass.consolidate();
         }
+    }
+
+    public Class getClassById(String id) {
+        return classMap.get(id);
     }
 
     public Class getClass(Token token) throws SemanticException {
@@ -110,8 +123,6 @@ public class SymbolTable {
         return classMap.containsKey(idClass);
     }
 
-    // Creational methods from MiniSystem and MiniObject
-
     private void addObject() {
         Class miniObject = new MiniObject(new Token(TokenType.ID_CLASS, "Object", 0));
 
@@ -135,9 +146,12 @@ public class SymbolTable {
 
         Type typeVoid = new TypeVoid(tknVoid);
 
-        return new Method("static",
+
+        Method met = new Method("static",
                 typeVoid,
                 tknDebugPrint);
+        met.setBlock(new BlockNode(tknDebugPrint));
+        return met;
     }
 
     private void addSystem() {
@@ -178,6 +192,7 @@ public class SymbolTable {
                 tknPrintB);
 
         m.addParam(paramBoolean);
+        m.setBlock(new BlockNode(tknPrintB));
 
         return m;
     }
@@ -197,6 +212,7 @@ public class SymbolTable {
                 tknPrintBln);
 
         m.addParam(paramBoolean);
+        m.setBlock(new BlockNode(tknPrintBln));
 
         return m;
     }
@@ -215,7 +231,7 @@ public class SymbolTable {
                 getVoidType(),
                 tknPrintS);
         m.addParam(paramString);
-
+        m.setBlock(new BlockNode(tknPrintS));
         return m;
     }
 
@@ -234,6 +250,7 @@ public class SymbolTable {
                 tknPrintSln);
 
         m.addParam(paramString);
+        m.setBlock(new BlockNode(tknPrintSln));
 
         return m;
     }
@@ -252,6 +269,7 @@ public class SymbolTable {
                 getVoidType(),
                 tknPrintC);
         m.addParam(paramChar);
+        m.setBlock(new BlockNode(tknPrintC));
 
         return m;
     }
@@ -271,6 +289,7 @@ public class SymbolTable {
                 tknPrintCln);
 
         m.addParam(paramChar);
+        m.setBlock(new BlockNode(tknPrintCln));
 
         return m;
     }
@@ -291,6 +310,7 @@ public class SymbolTable {
                 tknPrintI);
 
         m.addParam(paramInt);
+        m.setBlock(new BlockNode(tknPrintI));
 
         return m;
     }
@@ -311,6 +331,7 @@ public class SymbolTable {
                 tknPrintIln);
 
         m.addParam(paramInt);
+        m.setBlock(new BlockNode(tknPrintIln));
 
         return m;
     }
@@ -321,9 +342,13 @@ public class SymbolTable {
                 0);
 
 
-        return new Method("static",
+        Method m = new Method("static",
                 getVoidType(),
                 tknPrintln);
+
+        m.setBlock(new BlockNode(tknPrintln));
+
+        return m;
     }
 
     private Type getStringType() {
@@ -373,10 +398,19 @@ public class SymbolTable {
 
         Type typePrimitive = getIntType();
 
-        return new Method("static",
+        Method m = new Method("static",
                 typePrimitive,
                 tknMet);
+        m.setBlock(new BlockNode(tknMet));
+        return m;
     }
 
 
+    public BlockNode getCurrentBlock() {
+        return currentBlock;
+    }
+
+    public void setCurrentBlock(BlockNode currentBlock) {
+        this.currentBlock = currentBlock;
+    }
 }
