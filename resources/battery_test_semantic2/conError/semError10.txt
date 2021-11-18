@@ -1,0 +1,14 @@
+///[Error:v2|12]
+///Variable declarada dentro de un bloque en el cual, el bloque externo tambien habia sido declarada
+class A {
+     static void main() {
+
+     }
+}
+
+class B extends A {
+    dynamic void m1(boolean v2){
+        boolean v1;
+        {boolean v2;}
+    }
+}

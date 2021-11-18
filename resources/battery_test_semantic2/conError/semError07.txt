@@ -1,4 +1,4 @@
-///[Error:a|11]
+///[Error:=|11]
 ///Conformacion de tipos en inicializacion de variable local
 class A {
      static void main() {

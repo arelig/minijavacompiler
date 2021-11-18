@@ -299,6 +299,9 @@ public class Class extends Entity {
             method.checkSentences();
         }
 
-        //falta chequear constructores
+        for (Constructor constructor : constrList) {
+            SymbolTable.getInstance().setCurrentUnit(constructor);
+            constructor.checkSentences();
+        }
     }
 }

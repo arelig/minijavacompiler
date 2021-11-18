@@ -414,16 +414,16 @@ public class SymbolTable {
         this.currentBlock = currentBlock;
     }
 
-    //si la clase conformante es una decendiente a conformar.
     public boolean classConform(String conforma, String conformante) throws SemanticException {
         boolean conforms = false;
-
-        Class claseAConformar = getClassById(conforma);
-        Class claseConformante = getClassById(conformante);
 
         if (conforma.equals(conformante)) {
             conforms = true;
         } else {
+            //todo refactor
+            Class claseAConformar = getClassById(conforma);
+            Class claseConformante = getClassById(conformante);
+
             conforms = searchForInheritance(claseAConformar, claseConformante);
         }
 

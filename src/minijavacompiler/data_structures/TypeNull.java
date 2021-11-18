@@ -17,7 +17,7 @@ public class TypeNull extends Type {
 
     @Override
     public boolean conform(Type type) {
-        return false;
+        return type instanceof TypeReference;
     }
 
     @Override

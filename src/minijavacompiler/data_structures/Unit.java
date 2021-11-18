@@ -37,17 +37,18 @@ public abstract class Unit extends Entity {
         return block;
     }
 
+    public abstract boolean isParamDeclared(String id);
+
     public void setBlock(BlockNode block) {
         this.block = block;
+        block.setUnitParams(paramsAsList);
     }
-
-    public abstract boolean isParamDeclared(String id);
 
     public abstract boolean isLocalAttrDeclared(String id);
 
-    public abstract HashMap<String, Parameter> getParamsMap();
-
     public abstract HashMap<String, Attribute> getLocalAttrMap();
+
+    public abstract HashMap<String, Parameter> getParamsMap();
 
     public void checkSentences() throws SemanticException {
         block.validate();
