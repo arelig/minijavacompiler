@@ -1,0 +1,16 @@
+///[Error:new|14]
+///El parametro actual no conforma con el parametro formal
+class A {
+
+    A(int a){}
+
+     static void main() {
+
+     }
+}
+
+class B extends A {
+    dynamic void m1(boolean v1){
+        A v2 = new A(false);
+    }
+}

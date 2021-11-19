@@ -1,0 +1,15 @@
+///[Error:return|13]
+///La expresion de retorno no coincide con el tipo de la unidad
+class A {
+     A(int z){}
+     dynamic boolean m3(int p){}
+     static void main() {}
+}
+
+class B extends A {
+    public A b;
+    static int m2() {}
+    dynamic int m1(boolean v1){
+        return v1;
+    }
+}

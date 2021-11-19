@@ -1,0 +1,11 @@
+class A {
+     static void main() {
+
+     }
+}
+
+class B extends A {
+    dynamic void m1(boolean v1){
+        int v2 = 2*(3+5);
+    }
+}

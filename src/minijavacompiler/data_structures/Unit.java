@@ -44,6 +44,8 @@ public abstract class Unit extends Entity {
         block.setUnitParams(paramsAsList);
     }
 
+    public abstract Type getReturnType();
+
     public abstract boolean isLocalAttrDeclared(String id);
 
     public abstract HashMap<String, Attribute> getLocalAttrMap();

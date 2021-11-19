@@ -8,7 +8,7 @@ import minijavacompiler.lexical_parser.Token;
 public class IfNode extends SentenceNode {
     private ExpressionNode condExpression;
     private SentenceNode bodySentence;
-    private ElseNode elseNode;
+    private SentenceNode elseNode;
 
     public IfNode(Token token) {
         super(token);
@@ -35,7 +35,7 @@ public class IfNode extends SentenceNode {
         this.bodySentence = bodySentence;
     }
 
-    public void setElseNode(SentenceNode elseSentence) {
+    public void setElseNode(SentenceNode elseNode) {
         this.elseNode = elseNode;
     }
 

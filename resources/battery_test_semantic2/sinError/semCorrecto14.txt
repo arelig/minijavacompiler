@@ -1,0 +1,15 @@
+class A {
+     A(int a){}
+     static void main() {}
+}
+
+class B extends A {
+    public A b;
+    static int m2() {}
+    dynamic void m1(boolean v1){
+        int a;
+        for(int i = 0; i < 10 ; i++){
+            a = m2();
+        }
+    }
+}

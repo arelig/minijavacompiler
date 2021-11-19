@@ -44,6 +44,11 @@ public class Constructor extends Unit {
     }
 
     @Override
+    public Type getReturnType() {
+        return null;
+    }
+
+    @Override
     public boolean isLocalAttrDeclared(String id) {
         return localAttrMap.containsKey(id);
     }

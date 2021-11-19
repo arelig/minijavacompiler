@@ -508,7 +508,6 @@ public class SyntaxParser {
         return sentenceNode;
     }
 
-//metele a acceso y encadenado
 
     private SentenceNode Asignacion() throws CompilerException {
         AssignmentNode assignmentNode = null;
@@ -569,13 +568,14 @@ public class SyntaxParser {
     }
 
     private SentenceNode Return() throws CompilerException {
-        ReturnNode returnNode = null;
+        ReturnNode returnNode;
 
         if (currentToken.getTokenType() == TokenType.RETURN) {
             returnNode = new ReturnNode(currentToken);
             match(TokenType.RETURN);
             ExpressionNode expressionNode = ExpresionOVacio();
             returnNode.setExpression(expressionNode);
+            returnNode.setUnit(SymbolTable.getInstance().getCurrentUnit());
         } else {
             throw createSyntaxException(currentToken, "return");
         }
@@ -597,9 +597,7 @@ public class SyntaxParser {
 
             sentenceIf.setCondExpression(condExpression);
             sentenceIf.setBodySentence(bodySentence);
-            if (elseSentence != null) {
-                sentenceIf.setElseNode(elseSentence);
-            }
+            sentenceIf.setElseNode(elseSentence);
         } else {
             throw createSyntaxException(currentToken, "if, (, )");
         }
@@ -633,7 +631,6 @@ public class SyntaxParser {
             match(TokenType.PARENTHESES_CLOSE);
             SentenceNode bodySentence = Sentencia();
 
-            //todo testear creacion
             forNode.setLocalVar(localVarCond);
             forNode.setVarCond(varCond);
             forNode.setAssignCond(assignCond);
@@ -673,7 +670,7 @@ public class SyntaxParser {
 
         if (firstsBinaryOperands().contains(currentToken.getTokenType())) {
             BinaryExpressionNode binaryExpressionNode = OperadorBinario();
-            ExpressionNode rightExpression = ExpresionUnaria(); //lado derecho expr bin
+            ExpressionNode rightExpression = ExpresionUnaria();
             binaryExpressionNode.setRightExpression(rightExpression);
             binaryExpressionNode.setLeftExpression(leftExpression);
             finalExpression = ExpresionPrima(binaryExpressionNode);
@@ -747,21 +744,31 @@ public class SyntaxParser {
     }
 
     private ExpressionNode ExpresionUnaria() throws CompilerException {
-        ExpressionNode expressionNode = null;
+        UnaryExpressionNode unaryExpressionNode = null;
+        OperandNode operandNode = null;
+
+        ExpressionNode returnExpression;
+
         if (firstsUnaryOperands().contains(currentToken.getTokenType())) {
-            OperadorUnario();
-            Operando();
+            unaryExpressionNode = OperadorUnario();
+            unaryExpressionNode.setRightExpression(Operando());
         } else if (firstsOperands().contains(currentToken.getTokenType())) {
-            expressionNode = Operando();
+            operandNode = Operando();
         } else {
             throw createSyntaxException(currentToken, "operador unario, operando");
         }
 
-        return expressionNode;
+        if (unaryExpressionNode != null) {
+            returnExpression = unaryExpressionNode;
+        } else {
+            returnExpression = operandNode;
+        }
+
+        return returnExpression;
     }
 
     private UnaryExpressionNode OperadorUnario() throws CompilerException {
-        UnaryExpressionNode unaryExpressionNode = null;
+        UnaryExpressionNode unaryExpressionNode;
 
         switch (currentToken.getTokenType()) {
             case ADD:
@@ -833,10 +840,10 @@ public class SyntaxParser {
 
         if (currentToken.getTokenType() == TokenType.PARENTHESES_OPEN) {
             match(TokenType.PARENTHESES_OPEN);
-            PrimarioParentesisAbierta();
+            accessNode = PrimarioParentesisAbierta();
         } else if (firstsPrimaryWithoutParentheses().contains(currentToken.getTokenType())) {
             accessNode = PrimarioSinParentesis();
-            Encadenado();
+            accessNode.setChainedNode(Encadenado());
         } else {
             throw createSyntaxException(currentToken, "(, this, new, idMet o idVar");
         }
@@ -863,53 +870,71 @@ public class SyntaxParser {
         return accessNode;
     }
 
-    private void PrimarioParentesisAbierta() throws CompilerException {
-        //casting
+    private AccessNode PrimarioParentesisAbierta() throws CompilerException {
+        AccessNode accessNode;
         if (currentToken.getTokenType() == TokenType.ID_CLASS) {
+            AccessCastingNode accessCastingNode = new AccessCastingNode(currentToken);
             match(TokenType.ID_CLASS);
             match(TokenType.PARENTHESES_CLOSE);
-            //aca tengo un casting (a)
-            PrimarioEntero();
-            Encadenado();
+            ExpressionNode rightExpression = PrimarioEntero();
+            ChainedNode chainedNode = Encadenado();
+            accessCastingNode.setRightExpression(rightExpression);
+            accessCastingNode.setChainedNode(chainedNode);
+
+            accessNode = accessCastingNode;
         } else if (firstsExpression().contains(currentToken.getTokenType())) {
-            PrimarioEnParentesis();
-            Encadenado();
+            AccessParenthesesExpr accessParenthesesExpr = new AccessParenthesesExpr(currentToken);
+            ExpressionNode accessExpression = PrimarioEnParentesis();
+            ChainedNode chainedNode = Encadenado();
+            accessParenthesesExpr.setExpression(accessExpression);
+            accessParenthesesExpr.setChainedNode(chainedNode);
+
+            accessNode = accessParenthesesExpr;
         } else {
             throw createSyntaxException(currentToken, "idClase, expresion");
         }
+
+        return accessNode;
     }
 
-    private void PrimarioEntero() throws CompilerException {
+    private ExpressionNode PrimarioEntero() throws CompilerException {
+        ExpressionNode expressionNode = null;
+
         if (firstsPrimaryWithoutParentheses().contains(currentToken.getTokenType())) {
-            PrimarioSinParentesis();
+            expressionNode = PrimarioSinParentesis();
         } else if (currentToken.getTokenType() == TokenType.PARENTHESES_OPEN) {
             match(TokenType.PARENTHESES_OPEN);
-            PrimarioParentesisAbierta();
+            expressionNode = PrimarioParentesisAbierta();
         } else {
             throw createSyntaxException(currentToken, "(, acceso");
         }
+
+        return expressionNode;
     }
 
-    private void PrimarioEnParentesis() throws CompilerException {
+    private ExpressionNode PrimarioEnParentesis() throws CompilerException {
+        ExpressionNode expressionNode = null;
         if (firstsExpression().contains(currentToken.getTokenType())) {
-            Expresion();
+            expressionNode = Expresion();
             match(TokenType.PARENTHESES_CLOSE);
         } else {
             throw createSyntaxException(currentToken, "expresion");
         }
+        return expressionNode;
     }
 
     private AccessNode AccesoThis() throws CompilerException {
         AccessThisNode accessThisNode = null;
+
         if (currentToken.getTokenType() == TokenType.THIS) {
             accessThisNode = new AccessThisNode(currentToken);
             match(TokenType.THIS);
+            accessThisNode.setRefClass(SymbolTable.getInstance().getCurrentClass().getTkn());
         } else {
             throw createSyntaxException(currentToken, "this");
         }
 
-        //todo almacenar el id de la clase en la que fue declarada?
-        accessThisNode.setRefClassType(TS.getCurrentClass().getTkn());
+        accessThisNode.setRefClass(TS.getCurrentClass().getTkn());
 
         return accessThisNode;
     }
@@ -920,15 +945,12 @@ public class SyntaxParser {
         if (currentToken.getTokenType() == TokenType.ID_MET_VAR) {
             id = currentToken;
             match(TokenType.ID_MET_VAR);
-            //si devuelve nulo es porque es una variable, por ahora.
-
 
             List<ExpressionNode> actualParams = ArgOVacio();
             if (actualParams == null) {
                 accessNode = new AccessVarNode(id);
             } else {
-                accessNode = new AccessVarNode(id);
-
+                accessNode = new AccessMetNode(id);
             }
         } else {
             throw createSyntaxException(currentToken, "idMet o idVar");
@@ -955,7 +977,6 @@ public class SyntaxParser {
         return accessConstructorNode;
     }
 
-    //si me devuelve nulo quiere decir que no hay argumentos ni parentesis, o sea, es un acceso var
     private List<ExpressionNode> ArgOVacio() throws CompilerException {
         List<ExpressionNode> actualParams = null;
 
@@ -1009,22 +1030,39 @@ public class SyntaxParser {
         }
     }
 
-    private void Encadenado() throws CompilerException {
+    private ChainedNode Encadenado() throws CompilerException {
+        ChainedNode chainedNode = null;
         if (currentToken.getTokenType() == TokenType.DOT) {
-            //nodo variable puede tener un encadenado
-            VarOMetodoEncadenado();
-            Encadenado();
+            chainedNode = VarOMetodoEncadenado();
+            chainedNode.setRightChainedNode(Encadenado());
         } else {
         }
+        return chainedNode;
     }
 
-    private void VarOMetodoEncadenado() throws CompilerException {
+    private ChainedNode VarOMetodoEncadenado() throws CompilerException {
+        ChainedNode chainedNode;
         if (currentToken.getTokenType() == TokenType.DOT) {
+            Token tknDot = currentToken;
             match(TokenType.DOT);
+            Token idMetVar = currentToken;
             match(TokenType.ID_MET_VAR);
-            ArgOVacio();
+            List<ExpressionNode> actualParams = ArgOVacio();
+
+            if (actualParams == null) {
+                chainedNode = new ChainedVarNode(tknDot);
+                chainedNode.setAccessId(idMetVar);
+            } else {
+                ChainedCallNode chainedCallNode = new ChainedCallNode(tknDot);
+                chainedCallNode.setActualParams(actualParams);
+                chainedCallNode.setAccessId(idMetVar);
+                chainedNode = chainedCallNode;
+            }
+
         } else {
             throw createSyntaxException(currentToken, ". , idMet, idVar");
         }
+
+        return chainedNode;
     }
 }

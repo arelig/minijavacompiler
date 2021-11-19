@@ -6,7 +6,6 @@ import minijavacompiler.lexical_parser.Token;
 public abstract class AccessNode extends OperandNode {
     private ChainedNode chainedNode;
 
-
     public AccessNode(Token token) {
         super(token);
     }

@@ -414,6 +414,10 @@ public class SymbolTable {
         this.currentBlock = currentBlock;
     }
 
+    public HashMap<String, Class> getClassMap() {
+        return classMap;
+    }
+
     public boolean classConform(String conforma, String conformante) throws SemanticException {
         boolean conforms = false;
 

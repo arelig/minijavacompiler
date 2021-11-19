@@ -1,5 +1,7 @@
-///[Error:=|10]
 class A {
+
+    A(int a){}
+
      static void main() {
 
      }
@@ -7,6 +9,6 @@ class A {
 
 class B extends A {
     dynamic void m1(boolean v1){
-        int v2 = null;
+        A v2 = new A(2);
     }
 }

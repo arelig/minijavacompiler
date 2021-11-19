@@ -1,0 +1,19 @@
+///[Error:a|14]
+///la variable no fue declarada en el contexto o es inalcanzable
+class A {
+     A(int a){}
+     dynamic boolean m3(int p){}
+     static void main() {}
+}
+
+class B extends A {
+    public A b;
+    static int m2() {}
+    dynamic void m1(boolean v1){
+        if(v1){
+            a = this.m2();
+        }else{
+            v1 = b.m3(a);
+        }
+    }
+}

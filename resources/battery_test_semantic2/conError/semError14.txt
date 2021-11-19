@@ -1,0 +1,16 @@
+///[Error:=|14]
+///Conformacion de tipos incompatible
+class A {
+
+    A(int a){}
+
+     static void main() {
+
+     }
+}
+
+class B extends A {
+    dynamic void m1(boolean v1){
+        this = "Hola";
+    }
+}

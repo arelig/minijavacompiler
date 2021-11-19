@@ -1,11 +1,19 @@
 class A {
+
+    A(int a){}
+
      static void main() {
 
      }
+
+         static int m2() {
+
+         }
 }
 
 class B extends A {
+    public A b;
     dynamic void m1(boolean v1){
-        A v2 = null;
+        int a = b.m2();
     }
 }

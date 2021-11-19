@@ -29,6 +29,10 @@ public class Class extends Entity {
         methsMap = new HashMap<>();
     }
 
+    public List<Constructor> getConstrList() {
+        return constrList;
+    }
+
 
     public void addAttr(Attribute attr) throws SemanticException {
         if (attrsMap.get(attr.getId()) != null) {

@@ -15,6 +15,9 @@ public class TypeVoid extends Type {
 
     }
 
+    //@todo con que conforma tipo void?
+    //void no termina de ser un tipo, denota un metodo que no tiene tipo de retorno
+    //o sea, false
     @Override
     public boolean conform(Type type) {
         return false;

@@ -1,0 +1,14 @@
+///[Error:=|12]
+///Conformacion de tipos incompatible encadenado llamada
+class A {
+     A(int a){}
+     static void main() {}
+     static boolean m2() {}
+}
+
+class B extends A {
+    public A b;
+    dynamic void m1(boolean v1){
+        int a = b.m2();
+    }
+}

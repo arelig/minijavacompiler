@@ -1,0 +1,15 @@
+class A {
+     A(int z){}
+     dynamic boolean m3(int p){}
+     static void main() {}
+}
+
+class B extends A {
+    public A b;
+    static int m2() {}
+    dynamic void m1(boolean v1){
+        for(int a = 0; v1 ; a++){
+            a = this.m2();
+        }
+    }
+}
