@@ -23,7 +23,6 @@ public class ForNode extends SentenceNode {
         if (type.getId().equals("boolean")) {
             //mismo que if, como evaluo el valor boolean de varCond
             //como modelo las repeticiones del for?!?!?!?!!?!?!??!?!?!?!!??!?!?! ah
-            //si se programa con un for me mato, literal me mato.
             //creo que se modela en ejecucion cuando haces el codigo, tiene mas sentido
         }
 

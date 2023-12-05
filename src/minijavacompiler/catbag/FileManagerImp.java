@@ -95,7 +95,7 @@ public class FileManagerImp implements FileManager {
         try {
             buffer.close();
         } catch (IOException e) {
-            System.out.println("Error closing the file \n");
+            System.out.println("Error al cerrar el archivo. \n");
         }
     }
 }
