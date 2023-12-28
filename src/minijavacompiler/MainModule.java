@@ -1,63 +1,71 @@
 package minijavacompiler;
 
-import minijavacompiler.catbag.FileManager;
-import minijavacompiler.catbag.FileManagerImp;
-import minijavacompiler.data_structures.SymbolTable;
+import com.sun.tools.attach.VirtualMachine;
+import minijavacompiler.lexical_parser.source_file_manager.SourceFileManager;
+import minijavacompiler.semantic_analysis.SemanticParser;
 import minijavacompiler.exceptions.CompilerException;
 import minijavacompiler.lexical_parser.LexicalParser;
 import minijavacompiler.syntax_analysis.SyntaxParser;
-
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Stack;
 
-public class MainModule {
-    private final Stack<CompilerException> stackException;
-    private boolean errorsDetected;
-    private SyntaxParser syntaxParser;
-    private LexicalParser lexicalParser;
+import minijavacompiler.code_generator.CodeGenerator;
 
+public class MainModule {
+    public static final boolean GENERATE_CODE = true;
+    public static final boolean FORMAT_CODE = true;
+    private Stack<CompilerException> compilerErrors;
+    private boolean errorsDetected;
+    private SourceFileManager sourceFileManager;
+    private LexicalParser lexicalParser;
+    private SyntaxParser syntaxParser;
+    private SemanticParser semanticParser;
 
     public MainModule(String fileName) {
-        stackException = new Stack<>();
+        compilerErrors = new Stack<>();
+        generateCode(fileName);
+    }
+    private String generateCode(String sourceFileName){
         try {
+            sourceFileManager = new SourceFileManager(sourceFileName);
+            sourceFileManager.validate();
 
-            FileManager fileManager = new FileManagerImp(fileName);
-            fileManager.validate();
-            lexicalParser = new LexicalParser(fileManager);
+            lexicalParser = new LexicalParser(sourceFileManager);
             lexicalParser.validate();
 
-            SymbolTable.getInstance().flush();
-            syntaxParser = new SyntaxParser(lexicalParser, fileManager);
+            syntaxParser = new SyntaxParser(lexicalParser, sourceFileManager);
+            syntaxParser.validate();
 
-            compile();
+            generateReportAndRestore();
 
-            fileManager.invalidate();
+            semanticParser = new SemanticParser();
 
-        } catch (FileNotFoundException exception) {
-            System.out.println("File path not found");
+
+            if(GENERATE_CODE){
+                return new CodeGenerator().generateCode(FORMAT_CODE);
+            }else{
+                return "";
+            }
+
+            sourceFileManager.invalidate();
+
+        }catch(IOException e){
+            System.out.println("IO Error");
+        }catch(CompilerException e){
+            compilerErrors.push(e);
         }
-    }
 
-    private void compile() {
-        try {
-            syntaxParser.start();
-            SymbolTable.getInstance().checkDeclaration();
-            SymbolTable.getInstance().checkSentences();
-        } catch (CompilerException exception) {
-            stackException.push(exception);
-        }
 
-        generateReportAndRestore();
     }
 
     private void generateReportAndRestore() {
-        if (stackException.isEmpty() && !errorsDetected) {
+        if (compilerErrors.isEmpty() && !errorsDetected) {
             System.out.println("Compilacion Exitosa");
             System.out.println("[SinErrores]");
-        } else if (!stackException.isEmpty()) {
+        } else if (!compilerErrors.isEmpty()) {
             errorsDetected = true;
-            while (!stackException.isEmpty()) {
-                CompilerException exception = stackException.pop();
+            while (!compilerErrors.isEmpty()) {
+                CompilerException exception = compilerErrors.pop();
                 System.out.println(exception.generateCodeError());
                 System.out.println(exception.generateElegantError());
             }

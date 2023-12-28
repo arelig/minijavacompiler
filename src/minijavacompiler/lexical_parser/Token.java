@@ -26,6 +26,12 @@ public class Token {
         return line;
     }
 
+
+
+    //bue, falleció el clean code
+    public String getId(){
+        return lexeme;
+    }
     public String toString() {
         return "(" +
                 typeToken + "," +

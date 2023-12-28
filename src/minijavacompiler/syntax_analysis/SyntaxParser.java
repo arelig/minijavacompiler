@@ -1,30 +1,50 @@
 package minijavacompiler.syntax_analysis;
 
-import minijavacompiler.ast_data_structures.expression_nodes.*;
-import minijavacompiler.ast_data_structures.sentence_nodes.*;
-import minijavacompiler.catbag.FileManager;
-import minijavacompiler.data_structures.Class;
-import minijavacompiler.data_structures.*;
+import minijavacompiler.symbol_table.ast.expression_nodes.*;
+import minijavacompiler.symbol_table.ast.access.*;
+import minijavacompiler.symbol_table.ast.sentence_nodes.*;
+import minijavacompiler.lexical_parser.source_file_manager.SourceFileManagerI;
+import minijavacompiler.symbol_table.entities.Class;
+import minijavacompiler.symbol_table.entities.*;
 import minijavacompiler.exceptions.CompilerException;
 import minijavacompiler.exceptions.SemanticException;
 import minijavacompiler.exceptions.SyntaxException;
 import minijavacompiler.lexical_parser.LexicalParser;
 import minijavacompiler.lexical_parser.Token;
 import minijavacompiler.lexical_parser.TokenType;
+import minijavacompiler.symbol_table.SymbolTable;
+import minijavacompiler.symbol_table.types.Type;
+import minijavacompiler.symbol_table.types.TypePrimitive;
+import minijavacompiler.symbol_table.types.TypeReference;
+import minijavacompiler.symbol_table.types.TypeVoid;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class SyntaxParser {
+    private final SourceFileManagerI sourceFileManager;
     private final LexicalParser lexicalParser;
-    private final FileManager fileManager;
-    private final SymbolTable TS = SymbolTable.getInstance();
+    private final SymbolTable ST = SymbolTable.getInstance();
     private Token currentToken;
 
-    public SyntaxParser(LexicalParser lexicalParser, FileManager fileManager) {
+    public SyntaxParser(LexicalParser lexicalParser, SourceFileManagerI fileManager) {
         this.lexicalParser = lexicalParser;
-        this.fileManager = fileManager;
+        this.sourceFileManager = fileManager;
+    }
+
+    public void validate() throws CompilerException {
+        currentToken = lexicalParser.nextToken();
+        startGrammarAnalysis();
+    }
+
+    private void startGrammarAnalysis() throws CompilerException {
+        if (currentToken.getTokenType() == TokenType.CLASS) {
+            classList();
+            match(TokenType.EOF);
+        } else {
+            throw createSyntaxException(currentToken, "class or EOF");
+        }
     }
 
     private void match(TokenType typeToken) throws CompilerException {
@@ -36,7 +56,7 @@ public class SyntaxParser {
     }
 
     private SyntaxException createSyntaxException(Token token, String expected) {
-        return new SyntaxException(token, expected, fileManager.line());
+        return new SyntaxException(token, expected, sourceFileManager.line(), sourceFileManager.column());
     }
 
     private List<TokenType> firstsMember() {
@@ -177,20 +197,6 @@ public class SyntaxParser {
                 TokenType.NEW);
     }
 
-    public void start() throws CompilerException {
-        currentToken = lexicalParser.nextToken();
-        startGrammarAnalysis();
-    }
-
-    private void startGrammarAnalysis() throws CompilerException {
-        if (currentToken.getTokenType() == TokenType.CLASS) {
-            classList();
-            match(TokenType.EOF);
-        } else {
-            throw createSyntaxException(currentToken, "class or EOF");
-        }
-    }
-
     private void classList() throws CompilerException {
         if (currentToken.getTokenType() == TokenType.CLASS) {
             classes();
@@ -210,18 +216,19 @@ public class SyntaxParser {
     private void classes() throws CompilerException {
         if (currentToken.getTokenType() == TokenType.CLASS) {
             match(TokenType.CLASS);
-            if (TS.isClassDeclared(currentToken.getLexeme())) {
-                throw new SemanticException(currentToken.getLexeme(), currentToken.getLine(), "Clase ya definida");
+            if (ST.isClassDeclared(currentToken.getLexeme())) {
+                throw new SemanticException(currentToken.getLexeme(), currentToken.getLine(),
+                        "Clase ya definida.");
             }
             Class aClass = new Class(currentToken);
             match(TokenType.ID_CLASS);
-            TS.setCurrentClass(aClass);
+            ST.setCurrentClass(aClass);
             Token ancestor = inheritance();
-            TS.getCurrentClass().addAncestor(ancestor);
+            ST.getCurrentClass().setDirectAncestor(ancestor);
             match(TokenType.BRACES_OPEN);
             membersList();
             match(TokenType.BRACES_CLOSE);
-            TS.addClass(aClass);
+            ST.addClass(aClass);
         } else {
             throw createSyntaxException(currentToken, "class or id class");
         }
@@ -245,8 +252,7 @@ public class SyntaxParser {
             attribute();
         } else if (currentToken.getTokenType() == TokenType.ID_CLASS) {
             constructor();
-        } else if (Arrays.asList(TokenType.STATIC, TokenType.DYNAMIC).
-                contains(currentToken.getTokenType())) {
+        } else if (Arrays.asList(TokenType.STATIC, TokenType.DYNAMIC).contains(currentToken.getTokenType())) {
             method();
         } else {
             throw createSyntaxException(currentToken, "public, private, id class, static, dynamic");
@@ -275,18 +281,16 @@ public class SyntaxParser {
     }
 
     private void method() throws CompilerException {
-        if (Arrays.asList(TokenType.STATIC, TokenType.DYNAMIC).
-                contains(currentToken.getTokenType())) {
-
+        if (Arrays.asList(TokenType.STATIC, TokenType.DYNAMIC).contains(currentToken.getTokenType())) {
             String bindingForm = bindingForm();
             Type returnType = methodReturnType();
             Token tknMet = currentToken;
             match(TokenType.ID_MET_VAR);
             Method aMethod = new Method(bindingForm, returnType, tknMet);
-            TS.setCurrentUnit(aMethod);
+            ST.setCurrentUnit(aMethod);
             parameters();
             aMethod.setBlock(block());
-            TS.getCurrentClass().addMet(aMethod);
+            ST.getCurrentClass().addMet(aMethod);
         } else {
             throw createSyntaxException(currentToken, "method binding: static or dynamic");
         }
@@ -297,9 +301,9 @@ public class SyntaxParser {
             Token tknConstr = currentToken;
             match(TokenType.ID_CLASS);
             Constructor aConstr = new Constructor(tknConstr);
-            TS.setCurrentUnit(aConstr);
+            ST.setCurrentUnit(aConstr);
             parameters();
-            TS.getCurrentClass().addConstructor(aConstr);
+            ST.getCurrentClass().addConstructor(aConstr);
             aConstr.setBlock(block());
         } else {
             throw createSyntaxException(currentToken, "id class");
@@ -351,7 +355,7 @@ public class SyntaxParser {
             match(TokenType.PR_CHAR);
             return new TypePrimitive(tknTipo);
         } else {
-            throw createSyntaxException(currentToken, "tipo primitivo");
+            throw createSyntaxException(currentToken, "Tipo primitivo");
         }
     }
 
@@ -361,7 +365,7 @@ public class SyntaxParser {
             Token tknAttr = currentToken;
             match(TokenType.ID_MET_VAR);
             Attribute a = new Attribute(visib, type, tknAttr);
-            TS.getCurrentClass().addAttr(a);
+            ST.getCurrentClass().addAttr(a);
             attrDeclListOrEmpty(visib, type);
         } else {
             throw createSyntaxException(currentToken, "id method or id var");
@@ -378,18 +382,18 @@ public class SyntaxParser {
     }
 
     private String bindingForm() throws CompilerException {
-        String visibility;
+        String binding;
 
         if (currentToken.getTokenType() == TokenType.STATIC) {
             match(TokenType.STATIC);
-            visibility = "static";
+            binding = "static";
         } else if (currentToken.getTokenType() == TokenType.DYNAMIC) {
             match(TokenType.DYNAMIC);
-            visibility = "dynamic";
+            binding = "dynamic";
         } else {
             throw createSyntaxException(currentToken, "static, dynamic");
         }
-        return visibility;
+        return binding;
     }
 
     private Type methodReturnType() throws CompilerException {
@@ -446,7 +450,7 @@ public class SyntaxParser {
             Type type = type();
             Token tkn = currentToken;
             match(TokenType.ID_MET_VAR);
-            TS.getCurrentUnit().addParam(new Parameter(type, tkn));
+            ST.getCurrentUnit().addParam(new Parameter(type, tkn));
         } else {
             throw createSyntaxException(currentToken, "parametro: tipo de parametro o nombre");
         }
@@ -459,7 +463,7 @@ public class SyntaxParser {
         if (currentToken.getTokenType() == TokenType.BRACES_OPEN) {
             blockNode = new BlockNode(currentToken);
             match(TokenType.BRACES_OPEN);
-            TS.setCurrentBlock(blockNode);
+            ST.setCurrentBlock(blockNode);
             ListaSentencias();
             match(TokenType.BRACES_CLOSE);
         } else {
@@ -471,11 +475,10 @@ public class SyntaxParser {
         return blockNode;
     }
 
-
     private void ListaSentencias() throws CompilerException {
         if (firstsSentence().contains(currentToken.getTokenType())) {
             SentenceNode sentenceNode = Sentencia();
-            TS.getCurrentBlock().addSentence(sentenceNode);
+            ST.getCurrentBlock().addSentence(sentenceNode);
             ListaSentencias();
         } else {
         }
@@ -516,8 +519,8 @@ public class SyntaxParser {
             AccessNode accessNode = Acceso();
             assignmentNode = new AssignmentNode(currentToken);
             ExpressionNode expressionNode = TipoDeAsignacion();
-            assignmentNode.setLeftNode(accessNode);
-            assignmentNode.setRightNode(expressionNode);
+            assignmentNode.setAccess(accessNode);
+            assignmentNode.setValue(expressionNode);
         } else {
             throw createSyntaxException(currentToken, "(, this, new, idMet o idVar");
         }
@@ -549,7 +552,7 @@ public class SyntaxParser {
             match(TokenType.ID_MET_VAR);
             ExpressionNode expression = VarLocalIni(localVarNode);
             localVarNode.setType(type);
-            localVarNode.setInit(expression);
+            localVarNode.setValue(expression);
         } else {
             throw createSyntaxException(currentToken, "int, boolean, char, String, idClass");
         }
@@ -559,7 +562,7 @@ public class SyntaxParser {
     private ExpressionNode VarLocalIni(LocalVarNode localVarNode) throws CompilerException {
         ExpressionNode expressionNode = null;
         if (currentToken.getTokenType() == TokenType.ASSIGN) {
-            localVarNode.setTknAssignInit(currentToken);
+            localVarNode.setTknAssignment(currentToken);
             match(TokenType.ASSIGN);
             expressionNode = Expresion();
         } else {
@@ -575,7 +578,7 @@ public class SyntaxParser {
             match(TokenType.RETURN);
             ExpressionNode expressionNode = ExpresionOVacio();
             returnNode.setExpression(expressionNode);
-            returnNode.setUnit(SymbolTable.getInstance().getCurrentUnit());
+            returnNode.setCurrentUnit(SymbolTable.getInstance().getCurrentUnit());
         } else {
             throw createSyntaxException(currentToken, "return");
         }
@@ -595,8 +598,8 @@ public class SyntaxParser {
             SentenceNode bodySentence = Sentencia();
             SentenceNode elseSentence = ElseOVacio();
 
-            sentenceIf.setCondExpression(condExpression);
-            sentenceIf.setBodySentence(bodySentence);
+            sentenceIf.setCondition(condExpression);
+            sentenceIf.setThenNode(bodySentence);
             sentenceIf.setElseNode(elseSentence);
         } else {
             throw createSyntaxException(currentToken, "if, (, )");
@@ -610,7 +613,7 @@ public class SyntaxParser {
             sentenceElse = new ElseNode(currentToken);
             match(TokenType.ELSE);
             SentenceNode bodySentence = Sentencia();
-            sentenceElse.setBodySentence(bodySentence);
+            sentenceElse.setBodyNode(bodySentence);
         } else {
         }
         return sentenceElse;
@@ -633,8 +636,8 @@ public class SyntaxParser {
 
             forNode.setLocalVar(localVarCond);
             forNode.setVarCond(varCond);
-            forNode.setAssignCond(assignCond);
-            forNode.setBodySentence(bodySentence);
+            forNode.setAssignmentNode(assignCond);
+            forNode.setBodyNode(bodySentence);
         } else {
             throw createSyntaxException(currentToken, "for, (, ;, )");
         }
@@ -929,12 +932,12 @@ public class SyntaxParser {
         if (currentToken.getTokenType() == TokenType.THIS) {
             accessThisNode = new AccessThisNode(currentToken);
             match(TokenType.THIS);
-            accessThisNode.setRefClass(SymbolTable.getInstance().getCurrentClass().getTkn());
+            accessThisNode.setReference(SymbolTable.getInstance().getCurrentClass().getToken());
         } else {
             throw createSyntaxException(currentToken, "this");
         }
 
-        accessThisNode.setRefClass(TS.getCurrentClass().getTkn());
+        accessThisNode.setReference(ST.getCurrentClass().getToken());
 
         return accessThisNode;
     }
@@ -950,7 +953,7 @@ public class SyntaxParser {
             if (actualParams == null) {
                 accessNode = new AccessVarNode(id);
             } else {
-                accessNode = new AccessMetNode(id);
+                accessNode = new AccessMethodNode(id);
             }
         } else {
             throw createSyntaxException(currentToken, "idMet o idVar");
@@ -969,7 +972,7 @@ public class SyntaxParser {
 
             List<ExpressionNode> actualParams = ArgsActuales();
             accessConstructorNode.setActualParams(actualParams);
-            accessConstructorNode.setTknRef(tknRef);
+            accessConstructorNode.setReference(tknRef);
         } else {
             throw createSyntaxException(currentToken, "new idClass");
         }
@@ -1045,18 +1048,18 @@ public class SyntaxParser {
         if (currentToken.getTokenType() == TokenType.DOT) {
             Token tknDot = currentToken;
             match(TokenType.DOT);
-            Token idMetVar = currentToken;
+            Token idMetOrVar = currentToken;
             match(TokenType.ID_MET_VAR);
             List<ExpressionNode> actualParams = ArgOVacio();
 
             if (actualParams == null) {
                 chainedNode = new ChainedVarNode(tknDot);
-                chainedNode.setAccessId(idMetVar);
+                chainedNode.setAccessToken(idMetOrVar);
             } else {
-                ChainedCallNode chainedCallNode = new ChainedCallNode(tknDot);
-                chainedCallNode.setActualParams(actualParams);
-                chainedCallNode.setAccessId(idMetVar);
-                chainedNode = chainedCallNode;
+                ChainedMethodNode chainedMethodNode = new ChainedMethodNode(tknDot);
+                chainedMethodNode.setActualParams(actualParams);
+                chainedMethodNode.setAccessToken(idMetOrVar);
+                chainedNode = chainedMethodNode;
             }
 
         } else {

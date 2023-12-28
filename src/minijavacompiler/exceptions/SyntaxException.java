@@ -6,13 +6,14 @@ public class SyntaxException extends CompilerException {
     private final Token currentToken;
     private final String expectedTokens;
     private final int line;
-
+    private final int column;
 
     //@todo "Error sintactico en linea N: no se encontro X cuando se esperaba los primeros de la produccion"
-    public SyntaxException(Token currentToken, String expectedTokens, int line) {
+    public SyntaxException(Token currentToken, String expectedTokens, int line, int column) {
         this.currentToken = currentToken;
         this.expectedTokens = expectedTokens;
         this.line = line;
+        this.column = column;
     }
 
     public String generateCodeError() {
@@ -21,6 +22,8 @@ public class SyntaxException extends CompilerException {
                 currentToken.getLexeme() +
                 "|" +
                 line +
+                "|" +
+                column +
                 "]";
     }
 

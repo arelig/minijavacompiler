@@ -1,7 +1,6 @@
 package minijavacompiler.lexical_parser;
 
-import minijavacompiler.catbag.FileManager;
-import minijavacompiler.catbag.Keywords;
+import minijavacompiler.lexical_parser.source_file_manager.SourceFileManagerI;
 import minijavacompiler.exceptions.LexicalException;
 
 public class LexicalParser {
@@ -31,14 +30,14 @@ public class LexicalParser {
     static final int VERTICAL_SLASH = 124;
     static final int BRACE_CLOSE = 125;
 
-    private final FileManager fileManager;
+    private final SourceFileManagerI fileManager;
     private final Keywords keywords;
 
     private String lexeme;
     private int currentChar;
     private boolean flagEOF;
 
-    public LexicalParser(FileManager fileManager) {
+    public LexicalParser(SourceFileManagerI fileManager) {
         this.fileManager = fileManager;
         keywords = new Keywords();
         flagEOF = false;
