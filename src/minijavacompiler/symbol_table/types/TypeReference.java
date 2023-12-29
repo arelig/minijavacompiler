@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.types;
 
+import minijavacompiler.ST;
 import minijavacompiler.exceptions.SemanticException;
 import minijavacompiler.lexical_parser.Token;
 import minijavacompiler.symbol_table.SymbolTable;
@@ -17,10 +18,10 @@ public class TypeReference extends Type {
     }
 
     public boolean checkDeclaration() {
-        boolean isReferenceDeclared = SymbolTable.getInstance().isClassDeclared(reference.getLexeme());
+        boolean isReferenceDeclared = ST.symbolTable.isClassDeclared(reference.getLexeme());
 
         if (!isReferenceDeclared) {
-            SymbolTable.getInstance().addError(new SemanticException(
+            ST.symbolTable.addError(new SemanticException(
                     reference.getLexeme(),
                     reference.getLine(),
                     "El tipo " +
@@ -37,7 +38,7 @@ public class TypeReference extends Type {
         if (type.isReference()) {
             conforms = classConform(reference.getId(), type.getId());
         } else {
-            SymbolTable.getInstance().addError(new SemanticException(
+            ST.symbolTable.addError(new SemanticException(
                     getId(),
                     getLine(),
                     "Conformacion de tipos incompatible"));
@@ -60,8 +61,8 @@ public class TypeReference extends Type {
             return true;
         }
 
-        Class classToConform = SymbolTable.getInstance().getClass(conforms);
-        Class conformantClass = SymbolTable.getInstance().getClass(conformant);
+        Class classToConform = ST.symbolTable.getClass(conforms);
+        Class conformantClass = ST.symbolTable.getClass(conformant);
 
         return searchForInheritance(classToConform, conformantClass);
     }

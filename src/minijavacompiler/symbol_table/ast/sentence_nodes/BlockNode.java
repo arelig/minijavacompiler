@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.ast.sentence_nodes;
 
+import minijavacompiler.ST;
 import minijavacompiler.code_generator.CodeGenerator;
 import minijavacompiler.symbol_table.entities.Parameter;
 import minijavacompiler.symbol_table.SymbolTable;
@@ -34,13 +35,14 @@ public class BlockNode extends SentenceNode {
     }
 
     private void checkInnerSentences() throws SemanticException {
-        outerBlock = SymbolTable.getInstance().getCurrentBlock();
-        SymbolTable.getInstance().setCurrentBlock(this);
+        outerBlock = ST.symbolTable.getCurrentBlock();
+        ST.symbolTable.setCurrentBlock(this);
 
         for (SentenceNode sentence : sentenceList) {
             sentence.checkSentences();
         }
-        SymbolTable.getInstance().setCurrentBlock(outerBlock);
+
+        ST.symbolTable.setCurrentBlock(outerBlock);
     }
 
     private void checkMinOffset() {
@@ -54,7 +56,7 @@ public class BlockNode extends SentenceNode {
 
     @Override
     public void generateCode() {
-        SymbolTable.getInstance().setCurrentBlock(this);
+        ST.symbolTable.setCurrentBlock(this);
 
         if(sentenceList.isEmpty()){
             CodeGenerator.generateCode("NOP ;empty block");
@@ -64,7 +66,7 @@ public class BlockNode extends SentenceNode {
         }
         CodeGenerator.generateCode("FMEM " + (nextVariableOffset - minVariableOffset) + " ;free memory from local variables");
 
-        SymbolTable.getInstance().setCurrentBlock(outerBlock);
+        ST.symbolTable.setCurrentBlock(outerBlock);
     }
 
     public int getNextVariableOffset(){

@@ -18,7 +18,7 @@ public class Parameter extends Entity {
         errorDetected = false;
     }
     public boolean checkDeclaration() {
-        if(!type.checkDeclaration()){
+        if(type.checkDeclaration()){
             return true;
         }else{
             setErrorDetected();

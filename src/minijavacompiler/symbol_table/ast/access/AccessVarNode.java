@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.ast.access;
 
+import minijavacompiler.ST;
 import minijavacompiler.code_generator.CodeGenerator;
 import minijavacompiler.symbol_table.SymbolTable;
 import minijavacompiler.symbol_table.ast.sentence_nodes.LocalVarNode;
@@ -26,11 +27,11 @@ public class AccessVarNode extends AccessNode {
     private Type getVarType() throws SemanticException {
         Type type;
 
-        localVar = SymbolTable.getInstance().getCurrentBlock().getLocalVar(getId());
+        localVar = ST.symbolTable.getCurrentBlock().getLocalVar(getId());
 
-        parameter = SymbolTable.getInstance().getCurrentUnit().getParamsMap().get(getId());
+        parameter = ST.symbolTable.getCurrentUnit().getParamsMap().get(getId());
 
-        attribute = SymbolTable.getInstance().getCurrentClass().getAttributes().get(getId());
+        attribute = ST.symbolTable.getCurrentClass().getAttributes().get(getId());
 
         if(localVar != null){
             type = localVar.getType();
@@ -48,7 +49,7 @@ public class AccessVarNode extends AccessNode {
     }
 
     private void checkInstanceAttribute() throws SemanticException {
-//        if(localVar != null && SymbolTable.getInstance().getCurrentClass().getBinding().equals("static")){
+//        if(localVar != null && ST.symbolTable.getCurrentClass().getBinding().equals("static")){
 //            throw new SemanticException(getId(),getLine(),
 //                    "Acceso: atributo de instancia en metodo estático.");
 //        }

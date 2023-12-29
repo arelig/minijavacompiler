@@ -3,6 +3,8 @@ package minijavacompiler.lexical_parser;
 import minijavacompiler.lexical_parser.source_file_manager.SourceFileManagerI;
 import minijavacompiler.exceptions.LexicalException;
 
+import java.util.List;
+
 public class LexicalParser {
     static final char ENTER = '\n';
     static final int EOF = -1;
@@ -37,6 +39,8 @@ public class LexicalParser {
     private int currentChar;
     private boolean flagEOF;
 
+    private List<LexicalException> lexicalExceptions;
+
     public LexicalParser(SourceFileManagerI fileManager) {
         this.fileManager = fileManager;
         keywords = new Keywords();
@@ -50,8 +54,7 @@ public class LexicalParser {
         }
     }
 
-
-    public boolean isEOF() {
+    public boolean isEOF(){
         return flagEOF;
     }
 
@@ -75,11 +78,17 @@ public class LexicalParser {
     }
 
     private LexicalException createLexicalException(String description) {
-        return new LexicalException(description,
+        LexicalException exception = new LexicalException(description,
                 fileManager.currentLine(),
                 lexeme,
                 fileManager.line(),
                 fileManager.column());
+        addError(exception);
+        return exception;
+    }
+
+    private void addError(LexicalException exception){
+        lexicalExceptions.add(exception);
     }
 
     private Token sEOF() {
@@ -194,7 +203,7 @@ public class LexicalParser {
 
         updateLexeme();
         updateCurrentChar();
-        throw createLexicalException("Invalid symbol");
+        throw createLexicalException("Símbolo inválido.");
     }
 
     private Token s1() throws LexicalException {
@@ -204,7 +213,7 @@ public class LexicalParser {
             return s1();
         }
         if (lexeme.length() > 9) {
-            throw createLexicalException("Integer too long");
+            throw createLexicalException("Entero muy largo.");
         }
         return createTokenFor(TokenType.LIT_INT);
     }
@@ -235,9 +244,6 @@ public class LexicalParser {
         }
     }
 
-    /*
-        @todo revisar algoritmo
-     */
 
     private Token s4() throws LexicalException {
         if (currentChar == BACKSLASH_REVERSE) {
@@ -253,7 +259,7 @@ public class LexicalParser {
             updateLexeme();
             return s13();
         }
-        throw createLexicalException("Invalid character literal");
+        throw createLexicalException("Caracter literal inválido.");
     }
 
     private Token s13() {
@@ -269,7 +275,7 @@ public class LexicalParser {
             updateCurrentChar();
             return s7();
         } else {
-            throw createLexicalException("Unclosed character literal");
+            throw createLexicalException("Caracter literal sin cerrar.");
         }
     }
 
@@ -279,7 +285,7 @@ public class LexicalParser {
             updateCurrentChar();
             return s5();
         } else {
-            throw createLexicalException("Unclosed character literal");
+            throw createLexicalException("Caracter literal sin cerrar.");
         }
     }
 
@@ -298,7 +304,7 @@ public class LexicalParser {
             return s10();
         } else if (currentChar == ENTER ||
                 currentChar == EOF) {
-            throw createLexicalException("Unclosed string literal ");
+            throw createLexicalException("Literal String sin cerrar.");
         }
 
         updateLexeme();
@@ -309,7 +315,7 @@ public class LexicalParser {
     private Token s9() throws LexicalException {
         if (currentChar == ENTER ||
                 currentChar == EOF) {
-            throw createLexicalException("Unclosed string literal");
+            throw createLexicalException("Literal String sin cerrar.");
         }
 
         updateLexeme();
@@ -459,7 +465,7 @@ public class LexicalParser {
 
     private Token s34() throws LexicalException {
         if (currentChar == EOF) {
-            throw createLexicalException("comentario sin cerrar");
+            throw createLexicalException("Comentario sin cerrar.");
         } else if (currentChar == ASTERISK) {
             updateCurrentChar();
             return s35();
@@ -470,7 +476,7 @@ public class LexicalParser {
 
     private Token s35() throws LexicalException {
         if (currentChar == EOF) {
-            throw createLexicalException("comentario sin cerrar");
+            throw createLexicalException("Comentario sin cerrar.");
         } else if (currentChar == SLASH) {
             updateCurrentChar();
             return s36();
@@ -491,7 +497,7 @@ public class LexicalParser {
             return s38();
         }
 
-        throw createLexicalException("falta simbolo &");
+        throw createLexicalException("Falta símbolo &.");
     }
 
     private Token s38() {
@@ -505,7 +511,7 @@ public class LexicalParser {
             return s40();
         }
 
-        throw createLexicalException("falta simbolo |");
+        throw createLexicalException("Falta símbolo |.");
     }
 
     private Token s40() {

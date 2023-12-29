@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.ast.expression_nodes;
 
+import minijavacompiler.ST;
 import minijavacompiler.code_generator.CodeGenerator;
 import minijavacompiler.exceptions.SemanticException;
 import minijavacompiler.lexical_parser.Token;
@@ -33,7 +34,7 @@ public class ChainedVarNode extends ChainedNode {
     }
 
     private void validateAttribute(Type prevType) throws SemanticException{
-        Class prevClass = SymbolTable.getInstance().getClass(prevType.getId());
+        Class prevClass = ST.symbolTable.getClass(prevType.getId());
 
         if (prevClass != null) {
             attribute = prevClass.getAttribute(accessToken.getId());
@@ -46,7 +47,7 @@ public class ChainedVarNode extends ChainedNode {
     }
 
     private void validateVisibility(Class prevClass) throws SemanticException {
-        Class currentClass = SymbolTable.getInstance().getCurrentClass();
+        Class currentClass = ST.symbolTable.getCurrentClass();
         boolean isPublic = attribute.getVisibility().equals("public");
 
         if (!isPublic && prevClass != currentClass) {

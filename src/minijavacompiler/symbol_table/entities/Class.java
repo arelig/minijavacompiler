@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.entities;
 
+import minijavacompiler.ST;
 import minijavacompiler.code_generator.CodeGenerator;
 import minijavacompiler.code_generator.TagManager;
 import minijavacompiler.exceptions.SemanticException;
@@ -10,7 +11,6 @@ import java.util.*;
 
 
 public class Class extends Entity {
-    private static final SymbolTable ST = SymbolTable.getInstance();
     private final Token token;
     private Token ancestor;
     private final HashSet<String> ancestorsSet;
@@ -44,12 +44,51 @@ public class Class extends Entity {
         offsetGenerated = false;
     }
 
+    public void generateCode(){
+        ST.symbolTable.setCurrentClass(this);
+        loadVTable();
+        for (Method method : methsMap.values()) {
+            method.generateCode();
+        }
+    }
+
+    public void loadVTable() {
+        int maxMethodOffset = getMaxMethodOffset();
+        calculateOffsetsMethods();
+        if (maxMethodOffset > -1) {
+            String methodsTags = generateMethodsTags(maxMethodOffset);
+            generateVTableCode(methodsTags);
+        }
+    }
+
+    private String generateMethodsTags(int maxMethodOffset) {
+        //error en generacion de los metodos de la vtable, son todos nulls
+        StringBuilder methodsTags = new StringBuilder();
+        for (int i = 0; i <= maxMethodOffset; i++) {
+            Method method = offsetMethods.get(i);
+            if (method == null) {
+                methodsTags.append(0).append(",");
+            } else {
+                methodsTags.append(method.getTag()).append(",");
+            }
+        }
+        return methodsTags.substring(0, methodsTags.length());
+    }
+
+    private void calculateOffsetsMethods() {
+        for(Method method : methsMap.values()){
+            for(int offset : method.getOffsets()){
+                offsetMethods.put(offset, method);
+            };
+        }
+    }
+
     public void generateOffsets() {
         if (!offsetGenerated) {
             generateOffsetsForAncestor();
             assignOffsetsToAttributes();
 
-            int methodOffset = calculateMinMethodOffset();
+            int methodOffset = getMinMethodOffset();
             int offsetIndex = 0;
 
             assignOffsetsToNonStaticMethods(methodOffset, offsetIndex);
@@ -59,7 +98,7 @@ public class Class extends Entity {
 
     private void generateOffsetsForAncestor() {
         if (ancestor != null) {
-            ST.getClass(ancestor.getLexeme()).generateOffsets();
+            ST.symbolTable.getClass(ancestor.getLexeme()).generateOffsets();
         }
     }
 
@@ -70,13 +109,10 @@ public class Class extends Entity {
         }
     }
 
-    private int calculateMinMethodOffset() {
-        return getMinMethodOffset();
-    }
     private int getMinMethodOffset() {
         int minOffset = 0;
         if (ancestor != null) {
-            Class ancestorClass = ST.getClass(ancestor.getLexeme());
+            Class ancestorClass = ST.symbolTable.getClass(ancestor.getLexeme());
             if (ancestorClass != null) {
                 int maxParentMethodOffset = findMaxNonStaticMethodOffset(ancestorClass);
                 minOffset = maxParentMethodOffset + 1;
@@ -84,7 +120,6 @@ public class Class extends Entity {
         }
         return minOffset;
     }
-
     private int findMaxNonStaticMethodOffset(Class ancestorClass) {
         int maxParentMethodOffset = -1;
 
@@ -113,66 +148,23 @@ public class Class extends Entity {
             }
         }
     }
+
     private void assignOffsetToNonStaticMethod(Method stMethod, int methodOffset, int offsetIndex) {
         if (stMethod.getOffsets().isEmpty()) {
             stMethod.addOffset(methodOffset + offsetIndex);
         }
         offsetMethods.put(stMethod.getOffsets().getLast(), stMethod);
     }
-
-    public void generateCode(){
-        ST.setCurrentClass(this);
-        loadVTable();
-        for (Method method : methsMap.values()) {
-            method.generateCode();
-        }
-    }
-
-    public void loadVTable() {
-        int maxMethodOffset = calculateMaxMethodOffset();
-        if (maxMethodOffset > -1) {
-            String methodsTags = generateMethodsTags(maxMethodOffset);
-
-            generateVTableCode(methodsTags);
-        }
-    }
-
-    private int calculateMaxMethodOffset() {
-        int maxMethodOffset = getMaxMethodOffset();
-        calculateOffsetsMethods();
-        return maxMethodOffset;
-    }
-
-    private String generateMethodsTags(int maxMethodOffset) {
-        StringBuilder methodsTags = new StringBuilder();
-        for (int i = 1; i <= maxMethodOffset; i++) {
-            Method method = offsetMethods.get(i);
-            if (method == null) {
-                methodsTags.append(0).append(", ");
-            } else {
-                methodsTags.append(method.getTag()).append(",");
-            }
-        }
-        return methodsTags.substring(0, methodsTags.length() - 1);
-    }
-
     private void generateVTableCode(String methodsTags) {
-        String vTableHeader = ".DATA ; VTable for " + getId();
+        String vTableHeader = ".DATA ;VTable for " + getId();
         String vTableTag = getVTableTag();
-        String vTableData = "DWORD " + methodsTags;
-        String codeHeader = ".CODE ; code for defined methods in " + getToken().getLexeme();
+        String vTableData = "DW " + methodsTags.substring(0, methodsTags.length() - 1);
+        String codeHeader = ".CODE ;code for defined methods in " + getId();
 
         CodeGenerator.generateCode(vTableHeader);
         CodeGenerator.setNextInstructionTag(vTableTag);
         CodeGenerator.generateCode(vTableData);
         CodeGenerator.generateCode(codeHeader);
-    }
-    private void calculateOffsetsMethods() {
-        for(Method method : methsMap.values()){
-            for(int offset : method.getOffsets()){
-                offsetMethods.put(offset, method);
-            };
-        }
     }
     public int getMaxMethodOffset(){
         if(maxMethodOffset == -1){
@@ -192,7 +184,7 @@ public class Class extends Entity {
 
     public String getVTableTag(){
         if(vTableTag == null){
-            vTableTag = TagManager.getTag("VT_" + getToken().getLexeme());
+            vTableTag = TagManager.getTag("VT_" + getId());
         }
         return vTableTag;
     }
@@ -208,7 +200,7 @@ public class Class extends Entity {
     public void checkDeclaration() {
         if(!errorDetected) {
             checkInheritance();
-            checkImplicitConstructor();
+            //checkImplicitConstructor();
             checkAttrs();
             checkMeths();
             checkConstr();
@@ -217,28 +209,29 @@ public class Class extends Entity {
 
     private void checkInheritance(){
         if(ancestor != null){
-            if(ST.isClassDeclared(ancestor.getLexeme())){
+            if(ST.symbolTable.isClassDeclared(ancestor.getLexeme())){
                 ancestorsSet.add(ancestor.getLexeme());
                 if(checkForCircularInheritance(ancestor)){
                     circularInheritance = true;
                     errorDetected = true;
-                    ST.addError(new SemanticException(ancestor.getLexeme(),
+                    ST.symbolTable.addError(new SemanticException(ancestor.getLexeme(),
                             ancestor.getLine(),
                             "La clase "
                                     + ancestor.getLexeme()
                                     + " forman una herencia circular."));
-                } else {
-                    errorDetected = true;
-                    ST.addError(new SemanticException(ancestor.getLexeme(),
-                            ancestor.getLine(),
-                            "La clase " +  ancestor.getLexeme() + " no fue declarada."));
                 }
+            }else {
+                errorDetected = true;
+                ST.symbolTable.addError(new SemanticException(ancestor.getLexeme(),
+                        ancestor.getLine(),
+                        "La clase " +  ancestor.getLexeme() + " no fue declarada."));
             }
         }
     }
     private void checkImplicitConstructor() {
         if(constrList.isEmpty()){
-            constrList.add(new Constructor(this.token));
+            Constructor implicitConstructor = new Constructor(this.token);
+            constrList.add(implicitConstructor);
         }
     }
     private void checkMeths()  {
@@ -273,7 +266,7 @@ public class Class extends Entity {
             circular = true;
         }else{
             ancestorsSet.add(inheritance.getLexeme());
-            circular = checkForCircularInheritance(ST.getClass(inheritance.getLexeme()).getAncestorToken());
+            circular = checkForCircularInheritance(ST.symbolTable.getClass(inheritance.getLexeme()).getAncestorToken());
         }
 
         return circular;
@@ -283,15 +276,15 @@ public class Class extends Entity {
         Method myMethod = methsMap.get(method.getId());
 
         if (!checkBinding(myMethod, method)) {
-            ST.addError(new SemanticException(myMethod.getId(), myMethod.getLine(),
+            ST.symbolTable.addError(new SemanticException(myMethod.getId(), myMethod.getLine(),
                     "El acceso para el método " + myMethod.getId() + " no coincide para redefinición"));
             return false;
         } else if (!checkReturnType(myMethod, method)) {
-            ST.addError(new SemanticException(myMethod.getId(), myMethod.getLine(),
+            ST.symbolTable.addError(new SemanticException(myMethod.getId(), myMethod.getLine(),
                     "El retorno para el método " + myMethod.getId() + " no coincide para redefinición"));
             return false;
         } else if (!checkParameters(myMethod, method)) {
-            ST.addError(new SemanticException(myMethod.getId(), myMethod.getLine(),
+            ST.symbolTable.addError(new SemanticException(myMethod.getId(), myMethod.getLine(),
                     "Los parámetros de " + myMethod.getId() + " no coinciden para redefinición"));
             return false;
         }
@@ -323,7 +316,7 @@ public class Class extends Entity {
     private void checkSameIdClass() {
         for (Constructor constr : constrList) {
             if (!(constr.getId().equals(this.getId()))) {
-                ST.addError(new SemanticException(constr.getId(),
+                ST.symbolTable.addError(new SemanticException(constr.getId(),
                         constr.getLine(),
                         "IdConstructor " +
                                 constr.getId() +
@@ -336,7 +329,7 @@ public class Class extends Entity {
         if(!consolidated){
             if(!circularInheritance) {
                 if(ancestor != null) {
-                    Class ancestorClass = ST.getClass(ancestor.getLexeme());
+                    Class ancestorClass = ST.symbolTable.getClass(ancestor.getLexeme());
                     if(ancestorClass != null){
                         descendantList.add(this);
                         ancestorClass.consolidate();
@@ -396,7 +389,7 @@ public class Class extends Entity {
         for (Method myMethod : methsMap.values()) {
             if (methsMap.containsKey(method.getId())) {
                 if (method.checkParameters(myMethod.getParamsAsList())) {
-                    ST.addError(new SemanticException(method.getId(),
+                    ST.symbolTable.addError(new SemanticException(method.getId(),
                             method.getLine(),
                             "El metodo " +
                                     method.getId() +
@@ -410,7 +403,7 @@ public class Class extends Entity {
 
     public void addAttr(Attribute attr) {
         if (attrsMap.get(attr.getId()) != null) {
-            ST.addError(new SemanticException(attr.getId(),
+            ST.symbolTable.addError(new SemanticException(attr.getId(),
                     attr.getLine(),
                     "El atributo " +
                             attr.getId() +
@@ -422,7 +415,7 @@ public class Class extends Entity {
     public void addConstructor(Constructor constructor) {
         for (Constructor constr : constrList) {
             if (constructor.checkParameters(constr.getParamsAsList())) {
-                ST.addError(new SemanticException(constructor.getId(),
+                ST.symbolTable.addError(new SemanticException(constructor.getId(),
                         constructor.getLine(),
                         "El constructor ya fue declarado"));
             }
@@ -436,7 +429,7 @@ public class Class extends Entity {
         this.ancestor = ancestor;
     }
     public Class getAncestorClass() {
-        return ST.getClass(ancestor.getLexeme());
+        return ST.symbolTable.getClass(ancestor.getLexeme());
     }
 
     private Token getAncestorToken() {
@@ -481,12 +474,12 @@ public class Class extends Entity {
 
     public void checkSentences() throws SemanticException {
         for (Method method : methsMap.values()) {
-            ST.setCurrentUnit(method);
+            ST.symbolTable.setCurrentUnit(method);
             method.checkSentences();
         }
 
         for (Constructor constructor : constrList) {
-            ST.setCurrentUnit(constructor);
+            ST.symbolTable.setCurrentUnit(constructor);
             constructor.checkSentences();
         }
     }

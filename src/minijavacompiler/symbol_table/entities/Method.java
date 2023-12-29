@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.entities;
 
+import minijavacompiler.ST;
 import minijavacompiler.code_generator.CodeGenerator;
 import minijavacompiler.code_generator.TagManager;
 import minijavacompiler.exceptions.SemanticException;
@@ -11,7 +12,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Method extends Unit {
-    private static final SymbolTable ST = SymbolTable.getInstance();
     private final String binding;
     private final Type returnType;
     private final HashMap<String, Parameter> params;
@@ -44,8 +44,8 @@ public class Method extends Unit {
     }
 
     public void generateCode(){
-        if(ST.getCurrentClass() == referencedClass){
-            ST.setCurrentUnit(this);
+        if(ST.symbolTable.getCurrentClass() == referencedClass){
+            ST.symbolTable.setCurrentUnit(this);
             generateCodeForMethod();
             getBlock().generateCode();
             generateMethodForReturn();
@@ -54,11 +54,11 @@ public class Method extends Unit {
 
     private void generateMethodForReturn() {
         CodeGenerator.generateCode("STOREFP ;unstack activation record");
-        CodeGenerator.generateCode("RET " + params.size() + (binding.equals("static") ? 0 : 1) + " ; method return");
+        CodeGenerator.generateCode("RET " + params.size() + (binding.equals("static") ? 0 : 1) + " ;method return");
     }
 
     private void generateCodeForMethod() {
-        CodeGenerator.setNextInstructionTag(this.methodTag);
+        CodeGenerator.setNextInstructionTag(getTag());
         CodeGenerator.generateCode("LOADFP ;dynamic link");
         CodeGenerator.generateCode("LOADSP ;stack activation record (1)");
         CodeGenerator.generateCode("STOREFP ;stack activation record (2)");
@@ -100,7 +100,7 @@ public class Method extends Unit {
     public void addParam(Parameter param){
         if (params.containsKey(param.getId())) {
             setErrorDetected();
-            ST.addError(new SemanticException(param.getId(), param.getLine(),
+            ST.symbolTable.addError(new SemanticException(param.getId(), param.getLine(),
                     "Parametro " + param.getId() + " ya declarado"));
         }
         params.put(param.getId(), param);

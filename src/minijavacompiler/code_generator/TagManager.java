@@ -9,14 +9,14 @@ public class TagManager {
 		if(tagPrefix == null)
 			tagPrefix = "";
 		Integer tagNumber = tags.get(tagPrefix);
-		if(tagNumber != null){
-			tagNumber++;
-			tags.put(tagPrefix, tagNumber);
-			return tagPrefix + "$" + tagNumber;
-		}else{
+		if(tagNumber == null){
 			tagNumber = 1;
 			tags.put(tagPrefix, tagNumber);
 			return tagPrefix;
+		}else{
+			tagNumber++;
+			tags.put(tagPrefix, tagNumber);
+			return tagPrefix + "$" + tagNumber;
 		}
 	}
 }

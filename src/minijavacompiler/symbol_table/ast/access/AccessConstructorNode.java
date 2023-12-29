@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.ast.access;
 
+import minijavacompiler.ST;
 import minijavacompiler.code_generator.CodeGenerator;
 import minijavacompiler.symbol_table.entities.*;
 import minijavacompiler.exceptions.SemanticException;
@@ -21,7 +22,7 @@ public class AccessConstructorNode extends AccessUnitNode {
 
     @Override
     public Type validate() throws SemanticException {
-        referenceClass = SymbolTable.getInstance().getClass(reference.getLexeme());
+        referenceClass = ST.symbolTable.getClass(reference.getLexeme());
         if (referenceClass != null) {
             checkParameterPattern();
         }else{
@@ -32,7 +33,7 @@ public class AccessConstructorNode extends AccessUnitNode {
     }
 
     public void checkParameterPattern() throws SemanticException {
-        List<Constructor> constructorList = SymbolTable.getInstance().getClass(reference.getLexeme()).getConstructors();
+        List<Constructor> constructorList = ST.symbolTable.getClass(reference.getLexeme()).getConstructors();
         List<Parameter> formalParams = new LinkedList<>();
 
         for (Constructor constructor : constructorList) {
@@ -50,10 +51,10 @@ public class AccessConstructorNode extends AccessUnitNode {
     }
 
     public void generateCode(){
-        int attrSize = SymbolTable.getInstance().getClass(reference.getLexeme()).getAttributes().size();
+        int attrSize = ST.symbolTable.getClass(reference.getLexeme()).getAttributes().size();
         CodeGenerator.generateCode("RMEM 1 ;return ");
         CodeGenerator.generateCode("PUSH " + (attrSize + 1) + " ;memory to reserve");
-        CodeGenerator.generateCode("PUSH " + CodeGenerator.getMallocTag() + " ;load malloc tag routine");
+        CodeGenerator.generateCode("PUSH " + CodeGenerator.tagMalloc + " ;load malloc tag routine");
         CodeGenerator.generateCode("CALL ;call malloc");
 
         if(referenceClass.hasDynamicMethods()){

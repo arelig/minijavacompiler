@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.ast.access;
 
+import minijavacompiler.ST;
 import minijavacompiler.symbol_table.ast.expression_nodes.ExpressionNode;
 import minijavacompiler.symbol_table.entities.Class;
 import minijavacompiler.symbol_table.SymbolTable;
@@ -36,7 +37,7 @@ public class AccessCastingNode extends AccessNode {
         return accessType;
     }
     private Type getAccessType() throws SemanticException {
-        Class accessClass = SymbolTable.getInstance().getClass(getId());
+        Class accessClass = ST.symbolTable.getClass(getId());
         TypeReference referenceAccess = new TypeReference(accessClass.getToken());
 
         return checkChaining(referenceAccess);

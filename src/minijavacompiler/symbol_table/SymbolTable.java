@@ -12,33 +12,41 @@ import minijavacompiler.symbol_table.types.TypePrimitive;
 import minijavacompiler.symbol_table.types.TypeVoid;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 
 public class SymbolTable {
-    private static SymbolTable instance;
     private final HashMap<String, Class> classMap;
-    private final Stack<CompilerException> compilerErrors;
+    private final List<CompilerException> compilerExceptions;
     private Method mainMethod;
     private Class currentClass;
     private Unit currentUnit;
     private BlockNode currentBlock;
 
-    public static SymbolTable getInstance() {
-        if (instance == null) {
-            instance = new SymbolTable();
-        }
-        return instance;
-    }
-
-    private SymbolTable() {
+    public SymbolTable() {
         classMap = new HashMap<>();
-        compilerErrors = new Stack<>();
+        compilerExceptions = new LinkedList<>();
         loadPredefinedClasses();
 
         mainMethod = null;
         currentBlock = null;
         currentClass = null;
         currentUnit = null;
+    }
+
+    public void addError(CompilerException exception) {
+        compilerExceptions.add(exception);
+    }
+
+    public void throwErrorsAfterConsolidate(){
+        while(!compilerExceptions.isEmpty()) {
+            for(CompilerException exception : compilerExceptions) {
+                System.out.println(exception.generateCodeError());
+                System.out.println(exception.generateElegantError());
+            }
+            compilerExceptions.clear();
+        }
     }
 
     private void loadPredefinedClasses() {
@@ -52,7 +60,6 @@ public class SymbolTable {
         for(Class aClass : classMap.values())
             aClass.generateCode();
     }
-
     public void checkDeclaration() {
         checkClassDeclaration();
         checkMainDeclaration();
@@ -61,15 +68,12 @@ public class SymbolTable {
         }
     }
 
-    public void flush() {
-        instance = null;
-    }
-
     public void consolidate()  {
         for (Class aClass : classMap.values()) {
             aClass.consolidate();
         }
     }
+
     private void checkMainDeclaration() {
         for (Class aClass : classMap.values()) {
             if (aClass.getMethods().containsKey("main")) {
@@ -80,6 +84,7 @@ public class SymbolTable {
                     addError(new SemanticException("main", 0, "Tipo de retorno incorrecto: deberia ser void"));
                 } else {
                     mainMethod = main;
+                    break;
                 }
             }
         }
@@ -90,10 +95,6 @@ public class SymbolTable {
             setCurrentClass(aClass);
             aClass.checkSentences();
         }
-    }
-
-    public void addError(CompilerException exception) {
-        compilerErrors.push(exception);
     }
 
     public void addClass(Class newClass) {
@@ -107,10 +108,10 @@ public class SymbolTable {
             addError(new SemanticException(newClass.getId(), newClass.getLine(), errorMessage));
         }
     }
-
     public Class getClass(String id) {
         return classMap.get(id);
     }
+
     public void checkClassDeclaration() {
         for (Class aClass : classMap.values()) {
             aClass.checkDeclaration();
@@ -423,13 +424,6 @@ public class SymbolTable {
         this.currentBlock = currentBlock;
     }
 
-    public HashMap<String, Class> getClassMap() {
-        return classMap;
-    }
-
-//    public void throwErrorsAfterConsolidate(){
-//        throw new SemanticException(compilerErrors);
-//    }
 
 
 

@@ -48,6 +48,8 @@ public abstract class Unit extends Entity {
     public abstract HashMap<String, Parameter> getParamsMap();
 
     public void checkSentences() throws SemanticException {
-        block.checkSentences();
+        if(block != null){
+            block.checkSentences();
+        }
     }
 }

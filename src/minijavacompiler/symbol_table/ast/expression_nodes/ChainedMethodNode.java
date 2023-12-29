@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.ast.expression_nodes;
 
+import minijavacompiler.ST;
 import minijavacompiler.code_generator.CodeGenerator;
 import minijavacompiler.symbol_table.entities.*;
 import minijavacompiler.exceptions.SemanticException;
@@ -39,7 +40,7 @@ public class ChainedMethodNode extends ChainedNode {
     }
 
     private void validateMethod(Type prevType) throws SemanticException {
-        Class prevClass = SymbolTable.getInstance().getClass(prevType.getId());
+        Class prevClass = ST.symbolTable.getClass(prevType.getId());
         if(prevClass != null){
             method = prevClass.getMethod(accessToken.getId());
 

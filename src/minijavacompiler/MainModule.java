@@ -1,74 +1,76 @@
 package minijavacompiler;
 
 import com.sun.tools.attach.VirtualMachine;
+import minijavacompiler.exceptions.SemanticException;
+import minijavacompiler.exceptions.SyntaxException;
 import minijavacompiler.lexical_parser.source_file_manager.SourceFileManager;
 import minijavacompiler.semantic_analysis.SemanticParser;
 import minijavacompiler.exceptions.CompilerException;
 import minijavacompiler.lexical_parser.LexicalParser;
+import minijavacompiler.symbol_table.SymbolTable;
 import minijavacompiler.syntax_analysis.SyntaxParser;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Stack;
 
 import minijavacompiler.code_generator.CodeGenerator;
+import minijavacompiler.virtual_machine.VMModule;
 
 public class MainModule {
-    public static final boolean GENERATE_CODE = true;
-    public static final boolean FORMAT_CODE = true;
-    private Stack<CompilerException> compilerErrors;
-    private boolean errorsDetected;
-    private SourceFileManager sourceFileManager;
-    private LexicalParser lexicalParser;
-    private SyntaxParser syntaxParser;
-    private SemanticParser semanticParser;
 
-    public MainModule(String fileName) {
-        compilerErrors = new Stack<>();
-        generateCode(fileName);
+    public MainModule(String[] args) {
+        String sourceFileName = "/home/arelig/Documents/UNS/Compiladores/Compilador/minijavacompiler/resources/inout/input.txt";
+        String outputFileName = "/home/arelig/Documents/UNS/Compiladores/Compilador/minijavacompiler/resources/inout/output.txt";
+        //String sourceFileName = args[0];
+
+        String code = generateCode(sourceFileName);
+        System.out.println("Codigo generado: " + code);
+
+        if(!code.isEmpty()){
+            Path path;
+            if(args.length != 1){
+                //String outputFileName = args[1];
+                path = Path.of(outputFileName);
+            }else{
+                path = Path.of("default.txt");
+            }
+            try{
+                if(path.getParent() != null){
+                    Files.createDirectories(path.getParent());
+                }
+                Files.writeString(path, code);
+                VMModule.main(new String[]{path.toString()});
+            }catch(IOException exception){
+                System.out.println("IO Error: " + exception.getMessage());
+                exception.printStackTrace();
+            }
+        }
     }
     private String generateCode(String sourceFileName){
         try {
-            sourceFileManager = new SourceFileManager(sourceFileName);
+            SourceFileManager sourceFileManager = new SourceFileManager(sourceFileName);
             sourceFileManager.validate();
 
-            lexicalParser = new LexicalParser(sourceFileManager);
+            LexicalParser lexicalParser = new LexicalParser(sourceFileManager);
             lexicalParser.validate();
 
-            syntaxParser = new SyntaxParser(lexicalParser, sourceFileManager);
+            SyntaxParser syntaxParser = new SyntaxParser(lexicalParser, sourceFileManager);
             syntaxParser.validate();
 
-            generateReportAndRestore();
-
-            semanticParser = new SemanticParser();
-
-
-            if(GENERATE_CODE){
-                return new CodeGenerator().generateCode(FORMAT_CODE);
-            }else{
-                return "";
-            }
+            SemanticParser semanticParser = new SemanticParser();
+            semanticParser.validate();
 
             sourceFileManager.invalidate();
-
-        }catch(IOException e){
-            System.out.println("IO Error");
-        }catch(CompilerException e){
-            compilerErrors.push(e);
-        }
-
-
-    }
-
-    private void generateReportAndRestore() {
-        if (compilerErrors.isEmpty() && !errorsDetected) {
-            System.out.println("Compilacion Exitosa");
             System.out.println("[SinErrores]");
-        } else if (!compilerErrors.isEmpty()) {
-            errorsDetected = true;
-            while (!compilerErrors.isEmpty()) {
-                CompilerException exception = compilerErrors.pop();
-                System.out.println(exception.generateCodeError());
-                System.out.println(exception.generateElegantError());
-            }
+            return new CodeGenerator().generateCode();
+
+        }catch(IOException exception){
+            System.out.println("IO Error: " + exception.getMessage());
+            exception.printStackTrace();
+        }catch(CompilerException exception){
+            System.out.println(exception.getMessage());
         }
+        return "";
     }
 }

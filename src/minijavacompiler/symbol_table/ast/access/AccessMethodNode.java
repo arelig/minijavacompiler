@@ -1,12 +1,12 @@
 package minijavacompiler.symbol_table.ast.access;
 
+import minijavacompiler.ST;
 import minijavacompiler.code_generator.CodeGenerator;
 import minijavacompiler.lexical_parser.TokenType;
 import minijavacompiler.symbol_table.ast.expression_nodes.ExpressionNode;
 import minijavacompiler.symbol_table.entities.*;
 import minijavacompiler.exceptions.SemanticException;
 import minijavacompiler.lexical_parser.Token;
-import minijavacompiler.symbol_table.SymbolTable;
 import minijavacompiler.symbol_table.entities.Class;
 import minijavacompiler.symbol_table.types.Type;
 import minijavacompiler.symbol_table.types.TypeVoid;
@@ -27,8 +27,10 @@ public class AccessMethodNode extends AccessUnitNode {
     }
 
     private void checkMethodReference() throws SemanticException {
-        Class currentClass = SymbolTable.getInstance().getCurrentClass();
-        method = SymbolTable.getInstance().getCurrentClass().getMethod(getId());
+        Class currentClass = ST.symbolTable.getCurrentClass();
+        if(currentClass != null) {
+            method = currentClass.getMethod(getId());
+        }
 
         if(method == null){
             throw new SemanticException(getId(), getLine(),

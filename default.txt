@@ -1,0 +1,115 @@
+                      .CODE                               ;program start
+                      PUSH heapInit$18                    ;load heapInit routine tag
+                      CALL                                ;call to heapInit
+                      PUSH main$18                        ;load main method tag
+                      CALL                                ;call to main
+                      HALT                                ;program completion
+heapInit$18:          RET 0                               ;empty heapInit routine
+malloc$18:            LOADFP                              ;unit initialization
+                      LOADSP
+                      STOREFP                             ;RA initialization completes
+                      LOADHL                              ;hl
+                      DUP                                 ;hl
+                      PUSH 1                              ;1
+                      ADD                                 ;hl+1
+                      STORE 4                             ;save the result (a pointer to the first cell in the memory region)
+                      LOAD 3                              ;load the number of cells to reserve (parameter that must be positive)
+                      ADD
+                      STOREHL                             ;move the heap limit (hl). expand the heap
+                      STOREFP
+                      RET 1                               ;return removing the parameter
+                      .DATA                               ;VTable for Init
+VT_Init$18:           DWORD 0, 
+                      .CODE                               ;code for defined methods in Init
+main@Init$18:         LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      STORE 0                             ;stores the top of the stack in the local variable
+                      RMEM 1                              ;return
+                      PUSH debugPrint@Object$18           ; load tag method debugPrint
+                      FMEM 1                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 00                              ;method return
+                      .DATA                               ;VTable for Object
+VT_Object$18:         DWORD 0, 
+                      .CODE                               ;code for defined methods in Object
+debugPrint@Object$18: LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 00                              ;method return
+                      .DATA                               ;VTable for System
+VT_System$18:         DWORD 0, 
+                      .CODE                               ;code for defined methods in System
+printS@System$18:     LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 10                              ;method return
+printC@System$18:     LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 10                              ;method return
+printSln@System$18:   LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 10                              ;method return
+printCln@System$18:   LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 10                              ;method return
+println@System$18:    LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 00                              ;method return
+read@System$18:       LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 00                              ;method return
+printB@System$18:     LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 10                              ;method return
+printIln@System$18:   LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 10                              ;method return
+printI@System$18:     LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 10                              ;method return
+printBln@System$18:   LOADFP                              ;dynamic link
+                      LOADSP                              ;stack activation record (1)
+                      STOREFP                             ;stack activation record (2)
+                      NOP                                 ;empty block
+                      FMEM 0                              ;free memory from local variables
+                      STOREFP                             ;unstack activation record
+                      RET 10                              ;method return

@@ -10,10 +10,16 @@ import minijavacompiler.symbol_table.types.Type;
 public abstract class AccessNode extends OperandNode {
     protected ChainedNode chainedNode;
 
+    protected Token accessToken;
+
     public AccessNode(Token token) {
         super(token);
+        this.accessToken = token;
     }
 
+    public Token getAccessToken(){
+        return accessToken;
+    }
     public Type checkChaining(Type accessType) throws SemanticException {
         if(chainedNode == null){
             return accessType;

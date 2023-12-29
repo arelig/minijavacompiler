@@ -50,7 +50,8 @@ public class SourceFileManager implements SourceFileManagerI {
             column = 0;
             line++;
         } catch (IOException error) {
-            System.out.println("Error reading the file");
+            System.out.println("Error al leer el archivo.");
+            error.printStackTrace();
         }
 
     }

@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.entities;
 
+import minijavacompiler.ST;
 import minijavacompiler.exceptions.SemanticException;
 import minijavacompiler.lexical_parser.Token;
 import minijavacompiler.symbol_table.SymbolTable;
@@ -42,7 +43,7 @@ public class Constructor extends Unit {
 
     public void addParam(Parameter param) {
         if (paramsMap.containsKey(param.getId())) {
-            SymbolTable.getInstance().addError(new SemanticException(param.getId(), param.getLine(),
+            ST.symbolTable.addError(new SemanticException(param.getId(), param.getLine(),
                     "Parametro " + param.getId() + " ya declarado."));
         }
         paramsMap.put(param.getId(), param);
@@ -53,7 +54,7 @@ public class Constructor extends Unit {
     public Type getReturnType() {
         //Los constructores, a diferencia de los métodos, tienen como tipo de retorno el tipo de la clase del
         //objeto construido
-        Class referencedClass = SymbolTable.getInstance().getClass(getId());
+        Class referencedClass = ST.symbolTable.getClass(getId());
         return new TypeReference(referencedClass.getToken());
     }
     @Override

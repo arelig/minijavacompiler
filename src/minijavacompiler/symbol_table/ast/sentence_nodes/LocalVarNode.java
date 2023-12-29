@@ -1,5 +1,6 @@
 package minijavacompiler.symbol_table.ast.sentence_nodes;
 
+import minijavacompiler.ST;
 import minijavacompiler.code_generator.CodeGenerator;
 import minijavacompiler.lexical_parser.TokenType;
 import minijavacompiler.symbol_table.ast.expression_nodes.ExpressionNode;
@@ -22,8 +23,10 @@ public class LocalVarNode extends SentenceNode {
 
     @Override
     public void generateCode() {
-        value.generateCode();
-        CodeGenerator.setComment("Local variable declaration");
+        if(value != null) {
+            value.generateCode();
+            CodeGenerator.setComment("Local variable declaration");
+        }
     }
 
     public void checkSentences() throws SemanticException {
@@ -35,7 +38,7 @@ public class LocalVarNode extends SentenceNode {
         boolean isDeclaredInnerBlock = isDeclaredInnerBlock();
 
         boolean isDeclaredOuterBlock = false;
-        if (SymbolTable.getInstance().getCurrentBlock().getOuterBlock() != null) {
+        if (ST.symbolTable.getCurrentBlock().getOuterBlock() != null) {
             isDeclaredOuterBlock = isDeclaredOuterBlock();
         }
 
@@ -43,12 +46,12 @@ public class LocalVarNode extends SentenceNode {
             throw new SemanticException(getId(), getLine(), "Variable duplicada en el alcance.");
         }
 
-        SymbolTable.getInstance().getCurrentBlock().addLocalVar(this);
+        ST.symbolTable.getCurrentBlock().addLocalVar(this);
     }
 
     private boolean isDeclaredInnerBlock() {
-        boolean isDeclaredInParam = SymbolTable.getInstance().getCurrentBlock().containsUnitParam(getId());
-        boolean isDeclaredLocal = SymbolTable.getInstance().getCurrentBlock().containsLocalVar(getId());
+        boolean isDeclaredInParam = ST.symbolTable.getCurrentBlock().containsUnitParam(getId());
+        boolean isDeclaredLocal = ST.symbolTable.getCurrentBlock().containsLocalVar(getId());
 
         return isDeclaredInParam || isDeclaredLocal;
     }
@@ -75,8 +78,8 @@ public class LocalVarNode extends SentenceNode {
     }
 
     private boolean isDeclaredOuterBlock() {
-        boolean isDeclaredParams = SymbolTable.getInstance().getCurrentBlock().getOuterBlock().containsUnitParam(getId());
-        boolean isDeclaredLocalVar = SymbolTable.getInstance().getCurrentBlock().getOuterBlock().containsLocalVar(getId());
+        boolean isDeclaredParams = ST.symbolTable.getCurrentBlock().getOuterBlock().containsUnitParam(getId());
+        boolean isDeclaredLocalVar = ST.symbolTable.getCurrentBlock().getOuterBlock().containsLocalVar(getId());
 
         return isDeclaredParams || isDeclaredLocalVar;
     }

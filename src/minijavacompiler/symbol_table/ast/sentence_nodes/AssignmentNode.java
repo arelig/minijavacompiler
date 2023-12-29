@@ -12,15 +12,21 @@ import minijavacompiler.symbol_table.types.TypePrimitive;
 public class AssignmentNode extends SentenceNode {
     private AccessNode access;
     private ExpressionNode value;
-    public AssignmentNode(Token token) {
-        super(token);
+    public AssignmentNode(AccessNode access, ExpressionNode value) {
+        super(access.getAccessToken());
+        this.access = access;
+        value = null;
     }
 
     public void checkSentences() throws SemanticException {
-        checkType();
+        if(value == null){
+            access.validate();
+        }else{
+            checkAssigmentType();
+        }
     }
-
-    private void checkType() throws SemanticException {
+    
+    private void checkAssigmentType() throws SemanticException {
         Type accessType = access.validate();
         Type valueType = value.validate();
 
@@ -49,12 +55,13 @@ public class AssignmentNode extends SentenceNode {
             value.generateCode();
             CodeGenerator.generateCode("ADD");
         }
-        else{
+        else if (getId().equals("-=")) {
             access.generateCode();
             value.generateCode();
             CodeGenerator.generateCode("SUB");
+        }else{
+            access.generateCode();
         }
-        access.generateCode();
     }
 
     public void setAccess(AccessNode accessNode) {
